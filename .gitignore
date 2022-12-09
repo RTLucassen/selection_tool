@@ -1,0 +1,7 @@
+selection_tool_venv
+__pycache__
+
+*.egg-info
+*.json
+
+test.py

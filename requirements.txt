@@ -1,0 +1,7 @@
+numpy==1.23.1
+pandas==1.5.2
+PyQt5==5.15.7
+natsort==8.2.0
+SimpleITK==2.2.0
+pyqtdarktheme==1.2.1
+git+file://C:/Users/rlucasse/Documents/repositories/slideloader/.git
