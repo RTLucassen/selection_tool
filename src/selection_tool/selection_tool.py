@@ -97,8 +97,9 @@ class SelectionWindow(QtWidgets.QWidget):
     # define widget size settings
     __window_fraction = 0.6
     __button_fraction = 0.08
-    __scrollable_frame_fraction = 0.108
+    __padding_button = 0.028
     __info_fraction = 0.15
+    __padding_info = 0.032
     __correction_fraction = 0.03
     # define other tool settings
     __magnification = 5
@@ -186,7 +187,7 @@ class SelectionWindow(QtWidgets.QWidget):
         Initialize widgets and place in window.
         """
         # define layout for the scroll region
-        self.__scroll_layout = QtWidgets.QFormLayout()
+        self.__scroll_layout_buttons = QtWidgets.QFormLayout()
 
         # create scan buttons
         self.__scan_buttons = []
@@ -198,22 +199,23 @@ class SelectionWindow(QtWidgets.QWidget):
             scan_button.specimen_label.setMaximumWidth(self.__button_size)
             scan_button.staining_label.setMaximumWidth(self.__button_size)
             scan_button.button.clicked.connect(self.__on_click)
-            self.__scroll_layout.addWidget(scan_button)
+            self.__scroll_layout_buttons.addWidget(scan_button)
             self.__scan_buttons.append(scan_button)
 
         # define frame for the scroll region and add the layout
         self.__scroll_frame = QtWidgets.QFrame()
-        self.__scroll_frame.setLayout(self.__scroll_layout)
-        # define the scroll area
-        self.__scroll_area = QtWidgets.QScrollArea()
-        self.__scroll_area.setWidget(self.__scroll_frame)
-        self.__scroll_area.setFixedWidth(
-            int(self.__scrollable_frame_fraction*self.__screen_size[0]),
+        self.__scroll_frame.setLayout(self.__scroll_layout_buttons)
+        # define the scroll area for the scan buttons
+        self.__scroll_area_buttons = QtWidgets.QScrollArea()
+        self.__scroll_area_buttons.setWidget(self.__scroll_frame)
+        scroll_width = (self.__button_fraction + self.__padding_button)
+        self.__scroll_area_buttons.setFixedWidth(
+            int(scroll_width*self.__screen_size[0]),
         )
-        self.__scroll_area.setHorizontalScrollBarPolicy(
+        self.__scroll_area_buttons.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
         )
-        self.__scroll_area.setVerticalScrollBarPolicy(
+        self.__scroll_area_buttons.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
         )
 
@@ -255,13 +257,36 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define information label
         self.__info_label = QtWidgets.QLabel()
-        self.__info_label.setFont(QtGui.QFont('DM Sans', 10))
+        self.__info_label.setFont(QtGui.QFont('DM Sans', 8))
         self.__info_label.setWordWrap(True)
         self.__info_label.setMargin(10)
         self.__info_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignJustify)
         self.__info_label.setMinimumWidth(
             int(self.__info_fraction*self.__screen_size[0]),
         )
+        
+        # define layout for the scroll region
+        self.__scroll_layout_label = QtWidgets.QFormLayout()        
+        self.__scroll_layout_label.addWidget(self.__info_label)
+
+        # define frame for the scroll region and add the layout
+        self.__scroll_frame = QtWidgets.QFrame()
+        self.__scroll_frame.setLayout(self.__scroll_layout_label)
+
+        # define the scroll area for text
+        self.__scroll_area_label = QtWidgets.QScrollArea()
+        self.__scroll_area_label.setWidget(self.__scroll_frame)
+        scroll_width = (self.__info_fraction + self.__padding_info)
+        self.__scroll_area_label.setFixedWidth(
+            int(scroll_width*self.__screen_size[0])-25,
+        )
+        self.__scroll_area_label.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+        )
+        self.__scroll_area_label.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
+        )
+
         # define text box
         self.__textbox = QtWidgets.QLineEdit(self)
         self.__textbox.setFont(QtGui.QFont('DM Sans', 12))
@@ -273,9 +298,9 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__widget_layout.addWidget(self.__previous_button, 0, 2)
         self.__widget_layout.addWidget(self.__next_button, 0, 3)
         self.__widget_layout.addWidget(self.__HE_checkbox, 0, 4)
-        self.__widget_layout.addWidget(self.__scroll_area, 1, 0, 2, 1)
+        self.__widget_layout.addWidget(self.__scroll_area_buttons, 1, 0, 2, 1)
         self.__widget_layout.addWidget(self.__image_viewer, 1, 1, 2, 1)
-        self.__widget_layout.addWidget(self.__info_label, 1, 2, 1, 3)
+        self.__widget_layout.addWidget(self.__scroll_area_label, 1, 2, 1, 3)
         self.__widget_layout.addWidget(self.__textbox, 2, 2, 1, 3)
         
         self.__change_widgets()
