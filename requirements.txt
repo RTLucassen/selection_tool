@@ -4,4 +4,4 @@ PyQt5==5.15.7
 natsort==8.2.0
 SimpleITK==2.2.0
 pyqtdarktheme==1.2.1
-git+file://C:/Users/rlucasse/Documents/repositories/slideloader/.git
+git+file://C:/app/slideloader/.git
