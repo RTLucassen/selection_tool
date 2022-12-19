@@ -1,2 +1,2 @@
-include *.ttf
-include *.txt
+recursive-include *.ttf
+recursive-include *.txt
