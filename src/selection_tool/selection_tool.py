@@ -624,7 +624,7 @@ class SelectionTool:
     def __init__(
         self,
         df: pd.DataFrame, 
-        selection_threshold: int = None, 
+        selection_threshold: int = None,
         select_by_default: bool = False,
         multithreading: bool = True,
         is_HE_function: Callable = None,
@@ -656,7 +656,7 @@ class SelectionTool:
         # load fonts
         for font_file in FONTS:
             QtGui.QFontDatabase.addApplicationFont(
-                os.path.join('fonts', font_file),
+                os.path.join('src', 'fonts', font_file),
             )
         
         # create window
