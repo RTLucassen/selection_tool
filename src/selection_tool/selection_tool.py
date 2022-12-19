@@ -28,6 +28,7 @@ Scroll wheel:                  zooming in and out
 Scroll wheel press:                       panning
 """
 
+import os
 import sys
 import threading
 import pandas as pd
@@ -38,6 +39,11 @@ from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
 from ._general_utils import is_HE, calculate_window_geometry, get_background_color
+
+FONTS = [
+    'DMSans-Bold.ttf', 
+    'DMSans-Regular.ttf',
+]
 
 class ScanButton(QtWidgets.QWidget):
     """
@@ -647,6 +653,12 @@ class SelectionTool:
         # apply stylesheet
         app.setStyleSheet(qdarktheme.load_stylesheet('light'))
 
+        # load fonts
+        for font_file in FONTS:
+            QtGui.QFontDatabase.addApplicationFont(
+                os.path.join('fonts', font_file),
+            )
+        
         # create window
         win = SelectionWindow(
             df, 
