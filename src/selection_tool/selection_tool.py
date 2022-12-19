@@ -28,7 +28,6 @@ Scroll wheel:                  zooming in and out
 Scroll wheel press:                       panning
 """
 
-import os
 import sys
 import threading
 import pandas as pd
