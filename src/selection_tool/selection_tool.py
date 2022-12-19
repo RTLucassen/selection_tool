@@ -35,10 +35,13 @@ import pandas as pd
 import qdarktheme
 from typing import Callable
 from PyQt5 import QtWidgets, QtCore, QtGui
+from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
 from ._general_utils import is_HE, calculate_window_geometry, get_background_color
+
+import src.fonts
 
 FONTS = [
     'DMSans-Bold.ttf', 
@@ -655,10 +658,10 @@ class SelectionTool:
 
         # load fonts
         for font_file in FONTS:
-            QtGui.QFontDatabase.addApplicationFont(
-                os.path.join('src', 'fonts', font_file),
-            )
-        
+            source = files(src.fonts).joinpath(font_file)
+            with as_file(source) as font_path:
+                QtGui.QFontDatabase.addApplicationFont(str(font_path))
+
         # create window
         win = SelectionWindow(
             df, 
