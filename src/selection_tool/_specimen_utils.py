@@ -40,9 +40,12 @@ class Scan:
         self.__paths = [os.path.join(base_dir, file) for file in files]
         
         # account for possibility of thumbnail image not available
-        if len(self.__scan_information['files']['THUMBNAIL']): 
-            thumb_file = self.__scan_information['files']['THUMBNAIL'][0]
-            self.__thumb_path = os.path.join(base_dir, thumb_file)
+        if 'THUMBNAIL' in self.__scan_information['files']:
+            if len(self.__scan_information['files']['THUMBNAIL']): 
+                thumb_file = self.__scan_information['files']['THUMBNAIL'][0]
+                self.__thumb_path = os.path.join(base_dir, thumb_file)
+            else:
+                self.__thumb_path = None
         else:
             self.__thumb_path = None
         
