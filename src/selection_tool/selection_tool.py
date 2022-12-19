@@ -42,9 +42,8 @@ from ._general_utils import is_HE, calculate_window_geometry, get_background_col
 from . import fonts
 
 FONTS = [
-    'RubikStorm-Regular.ttf'
-    #'DMSans-Bold.ttf', 
-    #'DMSans-Regular.ttf',
+    'DMSans-Bold.ttf', 
+    'DMSans-Regular.ttf',
 ]
 
 class ScanButton(QtWidgets.QWidget):

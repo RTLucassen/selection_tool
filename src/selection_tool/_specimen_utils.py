@@ -16,7 +16,8 @@
 Utility classes for specimen and slide information.
 """
 
-import os
+import re
+from pathlib import Path
 from natsort import natsorted
 
 class Scan:
@@ -37,13 +38,15 @@ class Scan:
         
         base_dir = self.__scan_information['base_dir']
         files = sorted(self.__scan_information['files']['SLIDE'])
-        self.__paths = [os.path.join(base_dir, file) for file in files]
+        self.__paths = [
+            str(Path(*re.split('\\/', base_dir), file)) for file in files
+        ]
         
         # account for possibility of thumbnail image not available
         if 'THUMBNAIL' in self.__scan_information['files']:
             if len(self.__scan_information['files']['THUMBNAIL']): 
                 thumb_file = self.__scan_information['files']['THUMBNAIL'][0]
-                self.__thumb_path = os.path.join(base_dir, thumb_file)
+                self.__thumb_path = str(Path(*re.split('\\/', base_dir), thumb_file))
             else:
                 self.__thumb_path = None
         else:
