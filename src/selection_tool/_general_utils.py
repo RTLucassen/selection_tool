@@ -50,7 +50,7 @@ def calculate_window_geometry(
 def get_background_color(
     thumbnail_path: str, 
     channel: int = 2, 
-    percentile: float = 87.5,
+    percentile: float = 85,
     default_color: tuple[int] = (255,255,255)
 ) -> tuple[int]:
     """

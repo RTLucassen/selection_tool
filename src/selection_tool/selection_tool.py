@@ -41,10 +41,12 @@ from ._specimen_utils import Specimen
 from ._general_utils import is_HE, calculate_window_geometry, get_background_color
 from . import fonts
 
+
 FONTS = [
     'DMSans-Bold.ttf', 
     'DMSans-Regular.ttf',
 ]
+
 
 class ScanButton(QtWidgets.QWidget):
     """
@@ -61,6 +63,7 @@ class ScanButton(QtWidgets.QWidget):
 
         # define widget for background color
         self.background = QtWidgets.QLabel()
+        self.background.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         # define text labels for specimen number and staining method
         self.specimen_label = QtWidgets.QLabel()
@@ -442,6 +445,18 @@ class SelectionWindow(QtWidgets.QWidget):
                 if self.__HE_checkbox.isChecked() and 'IHC' in scan.flags:
                     self.__scan_buttons[i].hide()
                 else:
+                    # add thumbnail image to button
+                    pixmap = QtGui.QPixmap(scan.thumbnail_path)
+                    if pixmap.width() > pixmap.height():
+                        pixmap = pixmap.scaledToWidth(
+                            int((1-2*self.__correction_fraction)*self.__button_size),
+                        )
+                    else:
+                        pixmap = pixmap.scaledToHeight(
+                            int((1-2*self.__correction_fraction)*self.__button_size),
+                        )
+                    self.__scan_buttons[i].background.setPixmap(pixmap)
+                    
                     # get the background color from the thumbnail
                     self.__background_colors[i] = get_background_color(
                         thumbnail_path = scan.thumbnail_path,
@@ -502,13 +517,6 @@ class SelectionWindow(QtWidgets.QWidget):
                         self.__scan_buttons[i].button.setText('No Thumbnail')
                     else:
                         self.__scan_buttons[i].button.setText('')
-                    
-                    # add thumbnail image to button
-                    self.__scan_buttons[i].button.setIcon(QtGui.QIcon(scan.thumbnail_path))
-                    self.__scan_buttons[i].button.setIconSize(QtCore.QSize(
-                        int((1-2*self.__correction_fraction)*self.__button_size), 
-                        int((1-2*self.__correction_fraction)*self.__button_size)
-                    ))  
             else:
                 self.__scan_buttons[i].hide()
 
