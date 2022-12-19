@@ -68,14 +68,14 @@ class ScanButton(QtWidgets.QWidget):
         self.specimen_label.setStyleSheet(
             'background-color: transparent; font-weight: bold'
             )
-        self.specimen_label.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.specimen_label.setFont(QtGui.QFont('DM Sans', 12))
         self.specimen_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop,
         )
 
         self.IHC_label = QtWidgets.QLabel()
         self.IHC_label.setStyleSheet('background-color: transparent')
-        self.IHC_label.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.IHC_label.setFont(QtGui.QFont('DM Sans', 12))
         self.IHC_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTop,
         )
@@ -84,7 +84,7 @@ class ScanButton(QtWidgets.QWidget):
         self.staining_label.setStyleSheet(
             'background-color: transparent; font-weight: bold'
         )
-        self.staining_label.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.staining_label.setFont(QtGui.QFont('DM Sans', 12))
         self.staining_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom,
         )
@@ -229,7 +229,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define case label
         self.__case_label = QtWidgets.QLabel()
-        self.__case_label.setFont(QtGui.QFont('Rubik Storm', 32))
+        self.__case_label.setFont(QtGui.QFont('DM Sans', 32))
         self.__case_label.setTextInteractionFlags(
             QtCore.Qt.TextInteractionFlag.TextSelectableByMouse,
         )
@@ -237,20 +237,20 @@ class SelectionWindow(QtWidgets.QWidget):
         # define next case button
         self.__next_button = QtWidgets.QPushButton()
         self.__next_button.setStyleSheet('font-weight: bold')
-        self.__next_button.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.__next_button.setFont(QtGui.QFont('DM Sans', 12))
         self.__next_button.setText('Next')
         self.__next_button.clicked.connect(self.__next_case)
 
         # define next case button
         self.__previous_button = QtWidgets.QPushButton()
         self.__previous_button.setStyleSheet('font-weight: bold')
-        self.__previous_button.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.__previous_button.setFont(QtGui.QFont('DM Sans', 12))
         self.__previous_button.setText('Previous')
         self.__previous_button.clicked.connect(self.__previous_case)
 
         self.__HE_checkbox = QtWidgets.QCheckBox()
         self.__HE_checkbox.setStyleSheet('font-weight: bold')
-        self.__HE_checkbox.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.__HE_checkbox.setFont(QtGui.QFont('DM Sans', 12))
         self.__HE_checkbox.setText('Only H&&E')
         self.__HE_checkbox.setChecked(False)
         self.__HE_checkbox.stateChanged.connect(
@@ -265,7 +265,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define information label
         self.__info_label = QtWidgets.QLabel()
-        self.__info_label.setFont(QtGui.QFont('Rubik Storm', 8))
+        self.__info_label.setFont(QtGui.QFont('DM Sans', 8))
         self.__info_label.setWordWrap(True)
         self.__info_label.setMargin(10)
         self.__info_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignJustify)
@@ -297,7 +297,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define text box
         self.__textbox = QtWidgets.QLineEdit(self)
-        self.__textbox.setFont(QtGui.QFont('Rubik Storm', 12))
+        self.__textbox.setFont(QtGui.QFont('DM Sans', 12))
         self.__textbox.setPlaceholderText('Comments')
 
         # create widget layout and add widgets to it
