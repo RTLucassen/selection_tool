@@ -70,3 +70,39 @@ def get_background_color(
     color = tuple([round(np.mean(np.extract(mask, image[..., i]))) for i in range(3)])
     
     return color
+
+def number2roman(number: str) -> str:
+    """
+    Convert number to roman numeral.
+    """
+    try:
+        number = int(number)
+    except:
+        return number
+    else:
+        # define number map
+        number_map = [
+            (1000, 'M'), 
+            (900, 'CM'), 
+            (500, 'D'), 
+            (400, 'CD'), 
+            (100, 'C'), 
+            (90, 'XC'), 
+            (50, 'L'), 
+            (40, 'XL'), 
+            (10, 'X'), 
+            (9, 'IX'), 
+            (5, 'V'), 
+            (4, 'IV'), 
+            (1, 'I'),
+        ]
+
+        # define starting string
+        roman = ''
+        while number > 0:
+            for i, r in number_map:
+                while number >= i:
+                    roman += r
+                    number -= i
+
+        return roman

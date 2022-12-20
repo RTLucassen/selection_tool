@@ -38,7 +38,8 @@ from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
-from ._general_utils import is_HE, calculate_window_geometry, get_background_color
+from ._general_utils import is_HE, calculate_window_geometry, number2roman, \
+    get_background_color
 from . import fonts
 
 
@@ -67,9 +68,7 @@ class ScanButton(QtWidgets.QWidget):
 
         # define text labels for specimen number and staining method
         self.specimen_label = QtWidgets.QLabel()
-        self.specimen_label.setStyleSheet(
-            'background-color: transparent; font-weight: bold'
-            )
+        self.specimen_label.setStyleSheet('background-color: transparent')
         self.specimen_label.setFont(QtGui.QFont('DM Sans', 12))
         self.specimen_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop,
@@ -83,9 +82,7 @@ class ScanButton(QtWidgets.QWidget):
         )
 
         self.staining_label = QtWidgets.QLabel()
-        self.staining_label.setStyleSheet(
-            'background-color: transparent; font-weight: bold'
-        )
+        self.staining_label.setStyleSheet('background-color: transparent')
         self.staining_label.setFont(QtGui.QFont('DM Sans', 12))
         self.staining_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom,
@@ -105,7 +102,7 @@ class SelectionWindow(QtWidgets.QWidget):
     Implementation of window for WSI selection.
     """
     # define widget size settings
-    __window_fraction = 0.6
+    __window_fraction = 0.65
     __button_fraction = 0.08
     __padding_button = 0.028
     __info_fraction = 0.15
@@ -198,6 +195,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         # define layout for the scroll region
         self.__scroll_layout_buttons = QtWidgets.QFormLayout()
+        self.__scroll_layout_buttons.setVerticalSpacing(0)
 
         # create scan buttons
         self.__scan_buttons = []
@@ -432,9 +430,11 @@ class SelectionWindow(QtWidgets.QWidget):
             f'  ({self.__specimen_index+1}/{len(self.__specimens)})')
         self.__case_label.setText(case)
         self.__info_label.setText(self.__specimen.description)
+        self.__scroll_frame_info.adjustSize()
         self.__textbox.setText(self.__specimen.comment)
         
         # configure scan buttons
+        first_visible = None
         self.__background_colors = {}
         for i in range(self.__max_buttons):
             # change the button visibility
@@ -500,12 +500,12 @@ class SelectionWindow(QtWidgets.QWidget):
                                 if scan.slide.block == s.slide.block:
                                     if 'IHC' in s.flags:
                                         IHC_count += 1
-                        message = f'({IHC_count}  IHCs)'
+                        message = f'({IHC_count} IHCs)'
                     else:
                         message = ''
                     self.__scan_buttons[i].IHC_label.setText(message)
                     self.__scan_buttons[i].specimen_label.setText(
-                        f' {scan.slide.specimen_number}{scan.slide.block}'
+                        f' {number2roman(scan.slide.specimen_number)} {scan.slide.block}'
                     )                    
                     self.__scan_buttons[i].staining_label.setText(
                         f' {scan.slide.staining}'
@@ -517,6 +517,9 @@ class SelectionWindow(QtWidgets.QWidget):
                         self.__scan_buttons[i].button.setText('No Thumbnail')
                     else:
                         self.__scan_buttons[i].button.setText('')
+
+                    if first_visible is None:
+                        first_visible = i
             else:
                 self.__scan_buttons[i].hide()
 
@@ -524,10 +527,8 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__scroll_frame_buttons.adjustSize()
 
         # set the first selected image (or the first image if none are selected yet)
-        if len(self.__scan_indices) > 0:
-            self.__set_image(self.__scan_indices[0])
-        else:
-            self.__set_image(0)
+        if first_visible is not None:
+            self.__set_image(first_visible)
 
     def __on_click(self):
         """
