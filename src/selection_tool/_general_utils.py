@@ -47,30 +47,6 @@ def calculate_window_geometry(
 
     return (int(horizontal_offset), int(vertical_offset), int(width), int(height))
 
-def get_background_color(
-    thumbnail_path: str, 
-    channel: int = 2, 
-    percentile: float = 85,
-    default_color: tuple[int] = (255,255,255)
-) -> tuple[int]:
-    """
-    Get the background color for a WSI thumbnail image.
-    """
-    # return None if the specified path is None or does not exist
-    if thumbnail_path is None:
-        return default_color
-    elif not os.path.exists(thumbnail_path):
-        return default_color
-        
-    # load the image and determine the background color
-    image = sitk.GetArrayFromImage(sitk.ReadImage(thumbnail_path))
-    image = image.reshape((-1, 3))
-    single_channel = image[..., channel]
-    mask = np.where(single_channel >= np.percentile(single_channel, percentile), 1, 0)
-    color = tuple([round(np.mean(np.extract(mask, image[..., i]))) for i in range(3)])
-    
-    return color
-
 def number2roman(number: str) -> str:
     """
     Convert number to roman numeral.

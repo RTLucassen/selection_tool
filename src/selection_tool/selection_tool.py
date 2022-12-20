@@ -38,8 +38,7 @@ from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
-from ._general_utils import is_HE, calculate_window_geometry, number2roman, \
-    get_background_color
+from ._general_utils import is_HE, calculate_window_geometry, number2roman
 from . import fonts
 
 
@@ -110,7 +109,7 @@ class SelectionWindow(QtWidgets.QWidget):
     __correction_fraction = 0.03
     # define other tool settings
     __magnification = 5
-    __default_color = (245,245,245)
+    __background_color = (245,245,245)
     __specimen_buffer = (1,1)
     __select_non_HE = False
 
@@ -346,7 +345,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # set the pixmap
         self.__image_viewer.setImage(pixmap)
         self.__image_viewer.setStyleSheet(
-            f'background-color: rgb{self.__background_colors[scan_index]}',
+            f'background-color: rgb{self.__background_color}',
         )
         self.__image_viewer.clearZoom()
 
@@ -435,7 +434,6 @@ class SelectionWindow(QtWidgets.QWidget):
         
         # configure scan buttons
         first_visible = None
-        self.__background_colors = {}
         for i in range(self.__max_buttons):
             # change the button visibility
             if i < len(self.__specimen.scans):
@@ -457,12 +455,6 @@ class SelectionWindow(QtWidgets.QWidget):
                         )
                     self.__scan_buttons[i].background.setPixmap(pixmap)
                     
-                    # get the background color from the thumbnail
-                    self.__background_colors[i] = get_background_color(
-                        thumbnail_path = scan.thumbnail_path,
-                        default_color = self.__default_color,
-                    )
-
                     # set all buttons to the correct initial state
                     if i in self.__scan_indices:
                         self.__scan_buttons[i].button.setEnabled(True)
@@ -471,7 +463,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             ' border: 5px solid rgb(100,180,100)'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__background_colors[i]}'
+                            f'background-color: rgb{self.__background_color}'
                         )
                     elif 'IHC' in scan.flags and not self.__select_non_HE:
                         self.__scan_buttons[i].button.setEnabled(False)
@@ -480,7 +472,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             'border: 1px solid black'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__background_colors[i]}'
+                            f'background-color: rgb{self.__background_color}'
                         )
                     else:
                         self.__scan_buttons[i].button.setEnabled(True)
@@ -489,7 +481,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             ' border: 2px solid black'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__background_colors[i]}'
+                            f'background-color: rgb{self.__background_color}'
                         )
 
                     # add specimen and staining information
@@ -546,7 +538,7 @@ class SelectionWindow(QtWidgets.QWidget):
                         'border: 2px solid black'
                     ))
                     self.__scan_buttons[i].background.setStyleSheet(
-                        f'background-color: rgb{self.__background_colors[i]}'
+                        f'background-color: rgb{self.__background_color}'
                     )
                 self.__scan_indices = []
 
@@ -559,7 +551,7 @@ class SelectionWindow(QtWidgets.QWidget):
                     'border: 5px solid rgb(100,180,100)'
                 ))
                 self.__scan_buttons[scan_index].background.setStyleSheet(
-                    f'background-color: rgb{self.__background_colors[scan_index]}'
+                    f'background-color: rgb{self.__background_color}'
                 )
         else:
             self.__scan_indices.remove(scan_index)
@@ -569,7 +561,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 'border: 2px solid black'
             ))
             self.__scan_buttons[scan_index].background.setStyleSheet(
-                f'background-color: rgb{self.__background_colors[scan_index]}'
+                f'background-color: rgb{self.__background_color}'
             )
     
     def __next_case(self) -> None:
