@@ -213,11 +213,11 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__scan_buttons.append(scan_button)
 
         # define frame for the scroll region and add the layout
-        self.__scroll_frame = QtWidgets.QFrame()
-        self.__scroll_frame.setLayout(self.__scroll_layout_buttons)
+        self.__scroll_frame_buttons = QtWidgets.QFrame()
+        self.__scroll_frame_buttons.setLayout(self.__scroll_layout_buttons)
         # define the scroll area for the scan buttons
         self.__scroll_area_buttons = QtWidgets.QScrollArea()
-        self.__scroll_area_buttons.setWidget(self.__scroll_frame)
+        self.__scroll_area_buttons.setWidget(self.__scroll_frame_buttons)
         scroll_width = (self.__button_fraction + self.__padding_button)
         self.__scroll_area_buttons.setFixedWidth(
             int(scroll_width*self.__screen_size[0]),
@@ -280,12 +280,12 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__scroll_layout_label.addWidget(self.__info_label)
 
         # define frame for the scroll region and add the layout
-        self.__scroll_frame = QtWidgets.QFrame()
-        self.__scroll_frame.setLayout(self.__scroll_layout_label)
+        self.__scroll_frame_info = QtWidgets.QFrame()
+        self.__scroll_frame_info.setLayout(self.__scroll_layout_label)
 
         # define the scroll area for text
         self.__scroll_area_label = QtWidgets.QScrollArea()
-        self.__scroll_area_label.setWidget(self.__scroll_frame)
+        self.__scroll_area_label.setWidget(self.__scroll_frame_info)
         scroll_width = (self.__info_fraction + self.__padding_info)
         self.__scroll_area_label.setFixedWidth(
             int(scroll_width*self.__screen_size[0])-25,
@@ -521,7 +521,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 self.__scan_buttons[i].hide()
 
         # correct for changing the number of scan buttons visible
-        self.__scroll_frame.adjustSize()
+        self.__scroll_frame_buttons.adjustSize()
 
         # set the first selected image (or the first image if none are selected yet)
         if len(self.__scan_indices) > 0:
