@@ -16,11 +16,6 @@
 General utility functions for selection tool.
 """
 
-import os
-import numpy as np
-import SimpleITK as sitk
-import matplotlib.pyplot as plt
-
 def is_HE(staining: str) -> bool:
     return True if 'he' in staining.lower() else False
 
