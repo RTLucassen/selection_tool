@@ -475,28 +475,29 @@ class SelectionWindow(QtWidgets.QWidget):
                 path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
                 self.__loaded_images[key] = QtGui.QPixmap(path)
 
-        # define workers
-        def worker():
-            while True:
-                key = q.get()
-                self.__load_thumbail(key)
-                q.task_done()
+        if self.__multithreading:
+            # define workers
+            def worker():
+                while True:
+                    key = q.get()
+                    self.__load_thumbail(key)
+                    q.task_done()
 
-        # initialize threads
-        q = queue.Queue()
-        for _ in range(self.__workers):
-            t = threading.Thread(target=worker)
-            t.daemon = True
-            t.start()
-        
-        # put keys in the queue for which the workers will load the thumbnail images   
-        for specimen_index in indices:
-            for scan_index in range(len(self.__specimens[specimen_index].scans)):
-                key = (specimen_index, scan_index)
-                if key not in self.__loaded_images:
-                    if key not in self.__requested:
-                        q.put(key)
-                        self.__requested.append(key)
+            # initialize threads
+            q = queue.Queue()
+            for _ in range(self.__workers):
+                t = threading.Thread(target=worker)
+                t.daemon = True
+                t.start()
+            
+            # put keys in the queue for which the workers load the thumbnail images   
+            for specimen_index in indices:
+                for scan_index in range(len(self.__specimens[specimen_index].scans)):
+                    key = (specimen_index, scan_index)
+                    if key not in self.__loaded_images:
+                        if key not in self.__requested:
+                            q.put(key)
+                            self.__requested.append(key)
 
         # set case and info label
         case = (f'{self.__specimen.pa_number}-{self.__specimen.specimen_numbers}'
@@ -564,7 +565,7 @@ class SelectionWindow(QtWidgets.QWidget):
                                 if scan.slide.block == s.slide.block:
                                     if 'IHC' in s.flags:
                                         IHC_count += 1
-                        message = f'({IHC_count} IHCs)'
+                        message = f'{IHC_count} IHCs'
                     else:
                         message = ''
                     self.__scan_buttons[i].IHC_label.setText(message)
