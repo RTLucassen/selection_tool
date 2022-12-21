@@ -97,6 +97,7 @@ class ScanButton(QtWidgets.QWidget):
         self.__widget_layout.addWidget(self.staining_label, 1, 0, 1, 2)
         self.__widget_layout.addWidget(self.button, 0, 0, 2, 2)
 
+
 class SelectionWindow(QtWidgets.QWidget):
     """
     Implementation of window for WSI selection.
@@ -112,7 +113,7 @@ class SelectionWindow(QtWidgets.QWidget):
     __magnification = 5
     __background_color = (245,245,245)
     __specimen_buffer = (3,10)
-    __select_non_HE = False
+    __select_non_HE = True
     __workers = 2
 
     def __init__(
@@ -157,7 +158,6 @@ class SelectionWindow(QtWidgets.QWidget):
         # check if scans are already selected, if so, continue at the last specimen
         if 'selected_scans' in self.__df:
             for i, selection in enumerate(self.__df['selected_scans']):
-                print(selection)
                 if selection is not None:
                     self.__specimen_index = i
 
@@ -180,6 +180,8 @@ class SelectionWindow(QtWidgets.QWidget):
         # or IHC staining, add a flag to all scans, then sort the slides and scans
         self.__is_HE = is_HE if is_HE_function is None else is_HE_function
         for specimen in self.__specimens:
+            # sort slides
+            specimen.sort_slides(self.__is_HE)            
             for scan in specimen.scans:
                 flag = 'HE' if self.__is_HE(scan.slide.staining) else 'IHC'
                 if flag not in scan.flags:
@@ -474,7 +476,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Apply changes to widgets when the previous or next specimen is selected.
         """
-        # reset instance variables for specific specimen
+        # reset instance variables for specific specimen and sort its slides
         self.__specimen = self.__specimens[self.__specimen_index]
 
         # apply default selection mode (all are selected or deselected)
@@ -731,6 +733,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 t.join()
 
         return super().closeEvent(a0)
+
 
 class SelectionTool:
 

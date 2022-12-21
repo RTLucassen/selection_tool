@@ -19,6 +19,7 @@ Utility classes for specimen and slide information.
 import re
 from pathlib import Path
 from natsort import natsorted
+from ._general_utils import is_HE
 
 
 class Specimen:
@@ -57,6 +58,7 @@ class Specimen:
 
         # find all specimen numbers
         specimen_numbers = list(set([slide.specimen_number for slide in self.slides]))
+        specimen_numbers = ["''" if s == '' else s for s in specimen_numbers]
         self.__specimen_numbers = ', '.join(natsorted(specimen_numbers))
 
         # initialize additional instance attributes for comment
@@ -64,6 +66,23 @@ class Specimen:
             self.comments = specimen_information['comments']
         else:
             self.comments = '' 
+
+    def sort_slides(self, is_HE = is_HE):
+        """
+        Sort slides based on specimen number, block number, and staining.
+        """
+        unsorted_slides = []
+        for i, s in enumerate(self.__slides):
+            unsorted_slides.append(
+                (s.specimen_number, s.block, not is_HE(s.staining), s.staining, i),
+            )
+        indices_sorted_slides = [s[-1] for s in natsorted(unsorted_slides)]
+        
+        # apply the new order to the slides and scans
+        self.__slides = [self.__slides[i] for i in indices_sorted_slides]
+        self.__scans = []
+        for slide in self.__slides:
+            self.__scans.extend(slide.scans)
 
     @property
     def information(self):
