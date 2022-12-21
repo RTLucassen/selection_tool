@@ -171,11 +171,13 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__selection_threshold = selection_threshold
         
         # define the function to determine whether a slide has H&E staining
-        # and add a flag to all scans
+        # or IHC staining, add a flag to all scans, then sort the slides and scans
         self.__is_HE = is_HE if is_HE_function is None else is_HE_function
         for specimen in self.__specimens:
             for scan in specimen.scans:
-                scan.flags.append('HE' if self.__is_HE(scan.slide.staining) else 'IHC')
+                flag = 'HE' if self.__is_HE(scan.slide.staining) else 'IHC'
+                if flag not in scan.flags:
+                    scan.flags.append(flag)
 
         # initialize widgets in the window
         self.setWindowTitle('Selection tool')
@@ -503,7 +505,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__case_label.setText(case)
         self.__info_label.setText(self.__specimen.description)
         self.__scroll_frame_info.adjustSize()
-        self.__textbox.setText(self.__specimen.comment)
+        self.__textbox.setText(self.__specimen.comments)
         
         # configure scan buttons
         first_visible = None
@@ -672,7 +674,7 @@ class SelectionWindow(QtWidgets.QWidget):
         Store selection in specimen instance.
         """
         # store any comments and which scans were selected 
-        self.__specimen.comment = self.__textbox.text()
+        self.__specimen.comments = self.__textbox.text()
         for scan_index, scan in enumerate(self.__specimen.scans):
             if scan_index in self.__scan_indices:
                 scan.selected = True
@@ -685,13 +687,11 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         # make sure the last information is stored
         self.__store_selection()
-        # expand the dataframe with the selection information and save it
-        selection_df = pd.DataFrame({
-            **self.__df.to_dict('list'),
-            'updated_scans': [s.information for s in self.__specimens],
-            'selected_scans': [s.selected_information for s in self.__specimens],
-            'comments': [s.comment for s in self.__specimens],
-        })
+        # create a new dataframe, add the selection information, and save it
+        selection_df = self.__df.copy()
+        selection_df['slides'] = [s.information for s in self.__specimens]
+        selection_df['selected_scans'] = [s.selected_information for s in self.__specimens]
+        selection_df['comments'] = [s.comments for s in self.__specimens]
         selection_df.to_json(self.__output_path)
 
     def closeEvent(self, a0: QtGui.QCloseEvent):

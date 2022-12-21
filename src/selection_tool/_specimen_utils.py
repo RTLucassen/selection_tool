@@ -20,79 +20,104 @@ import re
 from pathlib import Path
 from natsort import natsorted
 
-class Scan:
+
+class Specimen:
     """
-    Implementation of scan class for interacting with metadata.
+    Implementation of specimen class for interacting with metadata.
     """
 
-    def __init__(self, slide, scan_information: dict) -> None:
+    def __init__(self, specimen_information: str, description: str = '') -> None:
         """
-        Initialize scan instance.
+        Initialize specimen instance and corresponding slide instances.
 
         Args:
-            scan_information: scan metadata.
+            specimen_information: metadata from all slides.
+            description: text description of the specimen.
         """
-        # initialize instance attributes for scan
-        self.__slide = slide
-        self.__scan_information = scan_information  
+        # convert specimen information from string to a dictionary if necessary
+        if isinstance(specimen_information, str):
+            specimen_information = eval(specimen_information)
         
-        base_dir = self.__scan_information['base_dir']
-        files = sorted(self.__scan_information['files']['SLIDE'])
-        self.__paths = [
-            str(Path(*re.split('\\/', base_dir), file)) for file in files
-        ]
-        
-        # account for possibility of thumbnail image not available
-        if 'THUMBNAIL' in self.__scan_information['files']:
-            if len(self.__scan_information['files']['THUMBNAIL']): 
-                thumb_file = self.__scan_information['files']['THUMBNAIL'][0]
-                self.__thumb_path = str(Path(*re.split('\\/', base_dir), thumb_file))
-            else:
-                self.__thumb_path = None
-        else:
-            self.__thumb_path = None
-        
-        # initialize additional instance attributes for states
-        if 'selected' in scan_information:
-            self.selected = self.__scan_information['selected']
-        else:
-            self.selected = None
+        # initialize attributes
+        self.__slides = [Slide(self, info) for info in specimen_information['slides']]
+        self.__scans = []
+        for slide in self.__slides:
+            self.__scans.extend(slide.scans)
+        self.__description = description
 
-        if 'flags' in scan_information:
-            self.flags = self.__scan_information['flags']
+        # check if the pa_number matches for all slides
+        pa_numbers = set([slide.pa_number for slide in self.__slides])
+        if len(pa_numbers) == 0:
+            self.__pa_number = None
+        elif len(pa_numbers) == 1:
+            self.__pa_number = pa_numbers.pop()
         else:
-            self.flags = []    
+            raise AssertionError(('At least two slides with a different '
+                'pa_number were assigned to this specimen.'))
 
-    @property
-    def slide(self):
-        return self.__slide
-    
+        # find all specimen numbers
+        specimen_numbers = list(set([slide.specimen_number for slide in self.slides]))
+        self.__specimen_numbers = ', '.join(natsorted(specimen_numbers))
+
+        # initialize additional instance attributes for comment
+        if 'comments' in specimen_information:
+            self.comments = specimen_information['comments']
+        else:
+            self.comments = '' 
+
     @property
     def information(self):
         return {
-            **self.__scan_information,
-            'selected': self.selected,
-            'flags': self.flags,
+            'slides': [slide.information for slide in self.__slides], 
+            'comments': self.comments,
         }
 
     @property
-    def paths(self):
-        return self.__paths
+    def selected_information(self):
+        # get the information of the selected scans
+        slide_information = []
+        for slide in self.__slides:
+            if slide.selected_information is not None:
+                slide_information.append(slide.selected_information)
+        # return information if at least one scan as selected
+        if len(slide_information):
+            return {
+                'slides': slide_information, 
+                'comments': self.comments,
+            }
+        else:
+            return None
 
     @property
-    def thumbnail_path(self):
-        return self.__thumb_path
+    def slides(self):
+        return self.__slides
+    
+    @property
+    def scans(self):
+        return self.__scans
+
+    @property
+    def pa_number(self):
+        return self.__pa_number
+
+    @property
+    def specimen_numbers(self):
+        return self.__specimen_numbers
+
+    @property
+    def description(self):
+        return self.__description
 
     def __repr__(self) -> str:
-        return f'Scan object'
-
+        description = str([s for s in self.slides])
+        return f'Specimen {self.pa_number}-{self.specimen_numbers}: {description}'
 
 class Slide:
     """
     Implementation of slide class for interacting with metadata.
     """
 
-    def __init__(self, specimen, slide_information: dict) -> None:
+    def __init__(self, specimen: Specimen, slide_information: dict) -> None:
         """
         Initialize slide instance.
 
@@ -154,89 +179,66 @@ class Slide:
     def __repr__(self) -> str:
         return f'Slide(Block {self.block}, {self.staining}, {len(self.scans)} scan(s))'
 
-
-class Specimen:
+class Scan:
     """
-    Implementation of specimen class for interacting with metadata.
+    Implementation of scan class for interacting with metadata.
     """
 
-    def __init__(self, specimen_information: str, description: str = '') -> None:
+    def __init__(self, slide: Slide, scan_information: dict) -> None:
         """
-        Initialize specimen instance and corresponding slide instances.
+        Initialize scan instance.
 
         Args:
-            specimen_information: metadata from all slides.
-            description: text description of the specimen.
+            scan_information: scan metadata.
         """
-        # convert specimen information from string to a dictionary if necessary
-        if isinstance(specimen_information, str):
-            specimen_information = eval(specimen_information)
+        # initialize instance attributes for scan
+        self.__slide = slide
+        self.__scan_information = scan_information  
         
-        # initialize attributes
-        self.__slides = [Slide(self, info) for info in specimen_information['slides']]
-        self.__scans = []
-        for slide in self.__slides:
-            self.__scans.extend(slide.scans)
-        self.__description = description
-        self.comment = ''
-
-        # check if the pa_number matches for all slides
-        pa_numbers = set([slide.pa_number for slide in self.__slides])
-        if len(pa_numbers) == 0:
-            self.__pa_number = None
-        elif len(pa_numbers) == 1:
-            self.__pa_number = pa_numbers.pop()
+        base_dir = self.__scan_information['base_dir']
+        files = sorted(self.__scan_information['files']['SLIDE'])
+        self.__paths = [
+            str(Path(*re.split('\\/', base_dir), file)) for file in files
+        ]
+        
+        # account for possibility of thumbnail image not available
+        if 'THUMBNAIL' in self.__scan_information['files']:
+            if len(self.__scan_information['files']['THUMBNAIL']): 
+                thumb_file = self.__scan_information['files']['THUMBNAIL'][0]
+                self.__thumb_path = str(Path(*re.split('\\/', base_dir), thumb_file))
+            else:
+                self.__thumb_path = None
         else:
-            raise AssertionError(('At least two slides with a different '
-                'pa_number were assigned to this specimen.'))
-
-        # find all specimen numbers
-        specimen_numbers = list(set([slide.specimen_number for slide in self.slides]))
-        self.__specimen_numbers = ', '.join(natsorted(specimen_numbers))
-
-    @property
-    def information(self):
-        return {
-            'slides': [slide.information for slide in self.__slides], 
-            'comment': self.comment,
-        }
-
-    @property
-    def selected_information(self):
-        # get the information for 
-        slide_information = []
-        for slide in self.__slides:
-            if slide.selected_information is not None:
-                slide_information.append(slide.selected_information)
-        # return information if at least one scan as selected
-        if len(slide_information):
-            return {
-                'slides': slide_information, 
-                'comment': self.comment,
-            }
+            self.__thumb_path = None
+        
+        # initialize additional instance attributes for states
+        if 'selected' in scan_information:
+            self.selected = self.__scan_information['selected']
         else:
-            return None
+            self.selected = None
+
+        if 'flags' in scan_information:
+            self.flags = self.__scan_information['flags']
+        else:
+            self.flags = []    
 
     @property
-    def slides(self):
-        return self.__slides
+    def slide(self):
+        return self.__slide
     
     @property
-    def scans(self):
-        return self.__scans
+    def information(self):
+        self.__scan_information['selected'] = self.selected
+        self.__scan_information['flags'] = self.flags
+        return self.__scan_information
 
     @property
-    def pa_number(self):
-        return self.__pa_number
+    def paths(self):
+        return self.__paths
 
     @property
-    def specimen_numbers(self):
-        return self.__specimen_numbers
-
-    @property
-    def description(self):
-        return self.__description
+    def thumbnail_path(self):
+        return self.__thumb_path
 
     def __repr__(self) -> str:
-        description = str([s for s in self.slides])
-        return f'Specimen {self.pa_number}-{self.specimen_numbers}: {description}'
+        return f'Scan object'
