@@ -363,8 +363,7 @@ class SelectionWindow(QtWidgets.QWidget):
         key = (self.__specimen_index, scan_index)
         if key in self.__loaded_images:
             # get and set the pixmap
-            pixmap = self.__loaded_images[key]
-            self.__image_viewer.setImage(pixmap)
+            self.__image_viewer.setImage(self.__loaded_images[key])
             self.__image_viewer.setStyleSheet(
                 f'background-color: rgb{self.__background_color}',
             )
@@ -425,7 +424,6 @@ class SelectionWindow(QtWidgets.QWidget):
             key: index integer to indicate scan for specimen.
         """
         path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
-        #self.__loaded_images[key] = QtGui.QPixmap(path)
         array = sitk.GetArrayFromImage(sitk.ReadImage(path))
         height, width, _ = array.shape
         bytes_per_line = 3 * width
@@ -565,7 +563,11 @@ class SelectionWindow(QtWidgets.QWidget):
                                 if scan.slide.block == s.slide.block:
                                     if 'IHC' in s.flags:
                                         IHC_count += 1
-                        message = f'{IHC_count} IHCs'
+                        
+                        # construct message
+                        message = f'{IHC_count} IHC'
+                        if IHC_count != 1:
+                            message += 's'
                     else:
                         message = ''
                     self.__scan_buttons[i].IHC_label.setText(message)
@@ -584,7 +586,11 @@ class SelectionWindow(QtWidgets.QWidget):
                         self.__scan_buttons[i].button.setText('')
 
                     if first_visible is None:
-                        first_visible = i
+                        if self.__HE_checkbox.isChecked():
+                            if 'HE' in scan.flags:
+                                first_visible = i
+                        else:
+                            first_visible = i                            
             else:
                 self.__scan_buttons[i].hide()
 
@@ -641,7 +647,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Continue to the next case or close the window after the last case.
         """
-        self.__store_selection()
+        self.__save_selection()
 
         # continue to the next specimen or close the window 
         if self.__specimen_index+1 >= len(self.__specimens):
@@ -654,7 +660,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Return to the previous case
         """
-        self.__store_selection()
+        self.__save_selection()
 
         # return to the previous specimen
         if self.__specimen_index > 0:
@@ -677,6 +683,8 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Save the selection results.
         """
+        # make sure the last information is stored
+        self.__store_selection()
         # expand the dataframe with the selection information and save it
         selection_df = pd.DataFrame({
             **self.__df.to_dict('list'),
@@ -690,7 +698,6 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Overwritten close event to save selection information
         """
-        self.__store_selection()
         self.__save_selection()
         return super().closeEvent(a0)
 
