@@ -29,17 +29,17 @@ class Specimen:
 
     def __init__(self, specimen_information: str, description: str = '') -> None:
         """
-        Initialize specimen instance and corresponding slide instances.
+        Initialize specimen instance and corresponding slide and scan instances.
 
         Args:
             specimen_information: metadata from all slides.
             description: text description of the specimen.
         """
-        # convert specimen information from string to a dictionary if necessary
+        # convert specimen information from a string to a dictionary if necessary
         if isinstance(specimen_information, str):
             specimen_information = eval(specimen_information)
         
-        # initialize attributes
+        # create slide instances and initialize attributes
         self.__slides = [Slide(self, info) for info in specimen_information['slides']]
         self.__scans = []
         for slide in self.__slides:
@@ -61,7 +61,7 @@ class Specimen:
         specimen_numbers = ["''" if s == '' else s for s in specimen_numbers]
         self.__specimen_numbers = ', '.join(natsorted(specimen_numbers))
 
-        # initialize additional instance attributes for comment
+        # initialize additional instance attributes for comments
         if 'comments' in specimen_information:
             self.comments = specimen_information['comments']
         else:
@@ -71,11 +71,14 @@ class Specimen:
         """
         Sort slides based on specimen number, block number, and staining.
         """
+        # create list with tuples that contain the characteristics for sorting
+        # in decending order of importance, with the slide index as last element
         unsorted_slides = []
         for i, s in enumerate(self.__slides):
             unsorted_slides.append(
                 (s.specimen_number, s.block, not is_HE(s.staining), s.staining, i),
             )
+        # sort the items in the list
         indices_sorted_slides = [s[-1] for s in natsorted(unsorted_slides)]
         
         # apply the new order to the slides and scans
@@ -131,6 +134,7 @@ class Specimen:
         description = str([s for s in self.slides])
         return f'Specimen {self.pa_number}-{self.specimen_numbers}: {description}'
 
+
 class Slide:
     """
     Implementation of slide class for interacting with metadata.
@@ -143,7 +147,7 @@ class Slide:
         Args:
             slide_information: slide metadata.
         """
-        # initialize instance attribute for slide
+        # initialize instance attributes for slide and create scan instances
         self.__specimen = specimen
         self.__slide_information = {
             key: val for (key, val) in slide_information.items() if key != 'scan'
@@ -173,7 +177,8 @@ class Slide:
                 **self.__slide_information,
                 'scan': scan_information,
             }
-        return None
+        else:
+            return None
 
     @property
     def scans(self):
@@ -198,6 +203,7 @@ class Slide:
     def __repr__(self) -> str:
         return f'Slide(Block {self.block}, {self.staining}, {len(self.scans)} scan(s))'
 
+
 class Scan:
     """
     Implementation of scan class for interacting with metadata.
@@ -220,7 +226,7 @@ class Scan:
             str(Path(*re.split('\\/', base_dir), file)) for file in files
         ]
         
-        # account for possibility of thumbnail image not available
+        # account for thumbnail image not being available
         if 'THUMBNAIL' in self.__scan_information['files']:
             if len(self.__scan_information['files']['THUMBNAIL']): 
                 thumb_file = self.__scan_information['files']['THUMBNAIL'][0]

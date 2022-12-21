@@ -22,10 +22,9 @@ _________________________________________________
 
 Viewer controls
 _________________________________________________
-Left mouse button press:              select area
-Right mouse button click:              reset view
+Left mouse button press:                  panning
 Scroll wheel:                  zooming in and out
-Scroll wheel press:                       panning
+Right mouse button click:              reset view
 """
 
 import sys
@@ -52,7 +51,7 @@ FONTS = [
 
 class ScanButton(QtWidgets.QWidget):
     """
-    Implementation of frame with scan button and information.
+    Implementation of widget with scan button and information.
     """
 
     def __init__(self) -> None:
@@ -60,10 +59,7 @@ class ScanButton(QtWidgets.QWidget):
         """
         super().__init__()
 
-        # define button widget
-        self.button = QtWidgets.QPushButton()
-
-        # define widget for background color
+        # define widget for scan image and background color
         self.background = QtWidgets.QLabel()
         self.background.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
@@ -74,20 +70,21 @@ class ScanButton(QtWidgets.QWidget):
         self.specimen_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignTop,
         )
-
         self.IHC_label = QtWidgets.QLabel()
         self.IHC_label.setStyleSheet('background-color: transparent')
         self.IHC_label.setFont(QtGui.QFont('DM Sans', 12))
         self.IHC_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTop,
         )
-
         self.staining_label = QtWidgets.QLabel()
         self.staining_label.setStyleSheet('background-color: transparent')
         self.staining_label.setFont(QtGui.QFont('DM Sans', 12))
         self.staining_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignBottom,
         )
+
+        # define button widget
+        self.button = QtWidgets.QPushButton()
 
         # configure layout
         self.__widget_layout = QtWidgets.QGridLayout(self)
@@ -110,9 +107,10 @@ class SelectionWindow(QtWidgets.QWidget):
     __padding_info = 0.032
     __correction_fraction = 0.03
     # define other tool settings
-    __magnification = 5
+    __magnification = 5.00
+    __load_high_magnification = True
     __background_color = (245,245,245)
-    __specimen_buffer = (3,10)
+    __specimen_buffer = (1,5)
     __select_non_HE = True
     __workers = 2
 
@@ -155,7 +153,8 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__loaded_images = {}
         self.__requested = []
         self.__specimen_index = 0
-        # check if scans are already selected, if so, continue at the last specimen
+
+        # if scans were already selected, continue at the last specimen
         if 'selected_scans' in self.__df:
             for i, selection in enumerate(self.__df['selected_scans']):
                 if selection is not None:
@@ -177,7 +176,7 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__selection_threshold = selection_threshold
         
         # define the function to determine whether a slide has H&E staining
-        # or IHC staining, add a flag to all scans, then sort the slides and scans
+        # or IHC staining, sort the slides and scans, and add a staining flag
         self.__is_HE = is_HE if is_HE_function is None else is_HE_function
         for specimen in self.__specimens:
             # sort slides
@@ -187,7 +186,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 if flag not in scan.flags:
                     scan.flags.append(flag)
 
-        # prepare queue and workers for multithreading
+        # prepare queue and workers if multithreading is used
         if self.__multithreading:
             # initialize threads
             self.__queue = queue.PriorityQueue()
@@ -198,9 +197,11 @@ class SelectionWindow(QtWidgets.QWidget):
                     _, key = self.__queue.get()
                     if key == 'terminate':
                         break
+                    elif key[2]:
+                        self.__load_image(key)
                     else:
                         self.__load_thumbail(key)
-                        self.__queue.task_done()
+                    self.__queue.task_done()
 
             # create workers
             self.__threads = []
@@ -209,7 +210,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 self.__threads[-1].daemon = True
                 self.__threads[-1].start()
 
-        # initialize widgets in the window
+        # configure window
         self.setWindowTitle('Selection tool')
         self.setGeometry(
             *calculate_window_geometry(self.__screen_size, self.__window_fraction),
@@ -225,7 +226,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
     def __initialize_widgets(self) -> None:
         """
-        Initialize widgets and place in window.
+        Initialize widgets and position in the window.
         """
         # define layout for the scroll region
         self.__scroll_layout_buttons = QtWidgets.QFormLayout()
@@ -347,43 +348,6 @@ class SelectionWindow(QtWidgets.QWidget):
         
         self.__change_widgets()
 
-    # def __set_image(self, scan_index: int) -> None:
-    #     """
-    #     Set an image in the main image viewer.
-
-    #     Args:
-    #         scan_index: index integer to indicate scan for specimen.
-    #     """        
-    #     # check if the higher magnification image is already in memory
-    #     key = (self.__specimen_index, scan_index)
-    #     if key in self.__loaded_images:
-    #         # create pixmap
-    #         image = self.__loaded_images[key]
-    #         height, width, _ = image.shape
-    #         bytes_per_line = 3 * width
-    #         pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
-    #             image.copy(), 
-    #             width, 
-    #             height, 
-    #             bytes_per_line, 
-    #             QtGui.QImage.Format_RGB888,
-    #         ))
-    #     elif len(self.__specimen.scans):
-    #         pixmap = QtGui.QPixmap(
-    #             self.__specimen.scans[scan_index].thumbnail_path,
-    #         )
-    #     else: 
-    #         self.__image_viewer.clearImage()
-    #         self.__image_viewer.setStyleSheet(qdarktheme.load_stylesheet('light'))
-    #         return
-
-    #     # set the pixmap
-    #     self.__image_viewer.setImage(pixmap)
-    #     self.__image_viewer.setStyleSheet(
-    #         f'background-color: rgb{self.__background_color}',
-    #     )
-    #     self.__image_viewer.clearZoom()
-
     def __set_image(self, scan_index: int) -> None:
         """
         Set an image in the main image viewer.
@@ -391,13 +355,18 @@ class SelectionWindow(QtWidgets.QWidget):
         Args:
             scan_index: index integer to indicate scan for specimen.
         """        
-        # get the image
-        key = (self.__specimen_index, scan_index)
+        # get the pixmap
+        key = (self.__specimen_index, scan_index, True)
+        if key not in self.__loaded_images:
+            key = (self.__specimen_index, scan_index, False)
         pixmap = self.__loaded_images[key]
+
         # check if a pixmap is available
         if pixmap is None:
             self.__image_viewer.clearImage()
-            self.__image_viewer.setStyleSheet(qdarktheme.load_stylesheet('light'))
+            self.__image_viewer.setStyleSheet(
+                qdarktheme.load_stylesheet('light'),
+            )
         else:
             # set the pixmap
             self.__image_viewer.setImage(pixmap)
@@ -406,56 +375,64 @@ class SelectionWindow(QtWidgets.QWidget):
             )
             self.__image_viewer.clearZoom()
         
+    def __load_image(self, key: tuple[int]) -> None:
+        """
+        Load higher magnification image on another thread.
+        
+        Args:
+            key: index to indicate scan for specimen.
+        """
+        # initialize SlideLoader instance
+        loader = SlideLoader({'progress_bar': False, 'multithreading': True})
+        
+        # check if there are any paths 
+        paths = self.__specimens[key[0]].scans[key[1]].paths
+        if not len(paths):
+            print('Warning: No path(s) for high magnification scan are available.')
+            return
 
-    # def __load_image(self, key: tuple[int]) -> None:
-    #     """
-    #     Load higher magnification images on another thread.
+        # since DICOM WSI are stored as separate images per magnification,
+        # where the largest images are slowest to load, try loading the scan at
+        # the desired magnification by adding one more magnification level at a time
+        # (because the magnification levels are not known before loading the images)
+        subset_paths = []
+        loaded = False
+        for path in paths:
+            subset_paths += [path]
+            loader.load_slide(subset_paths)
+            # try loading the image at a particular magnification
+            try:
+                array = loader.get_image(self.__magnification)
+            except ValueError: # catch the error if not possible
+                pass
+            else: # if possible, break out of the loop
+                height, width, _ = array.shape
+                bytes_per_line = 3 * width
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
+                    array.copy(), 
+                    width, 
+                    height, 
+                    bytes_per_line, 
+                    QtGui.QImage.Format_RGB888,
+                ))
+                self.__loaded_images[key] = pixmap
+                loaded = True
+                break
         
-    #     Args:
-    #         key: index integer to indicate scan for speci
-    #         men.
-    #     """
-    #     # initialize SlideLoader instance
-    #     loader = SlideLoader({'progress_bar': False, 'multithreading': False})
-        
-    #     # check if there are any paths 
-    #     paths = self.__specimens[key[0]].scans[key[1]].paths
-    #     if not len(paths):
-    #         print('Warning: No path(s) for high magnification scan are available.')
-    #         return
-
-    #     # since DICOM WSI are stored as separate image per magnification,
-    #     # where the largest images are slowest to load, try loading the scan at
-    #     # the desired magnification by adding one more magnification level at a time
-    #     # (because the magnification levels are not known before loading the images)
-    #     subset_paths = []
-    #     loaded = False
-    #     for path in paths:
-    #         subset_paths += [path]
-    #         loader.load_slide(subset_paths)
-    #         # try loading the image at a particular magnification
-    #         try:
-    #             image = loader.get_image(self.__magnification)
-    #         except ValueError: # catch the error if not possible
-    #             pass
-    #         else: # if possible, break out of the loop
-    #             self.__loaded_images[key] = image
-    #             loaded = True
-    #             break
-        
-    #     # if there are paths but the scan was not successfully loaded
-    #     # (e.g., because the specified magnification was unavailable)
-    #     if not loaded:
-    #         print(('Warning: A scan was not successfully loaded. '
-    #             'Check if the magnification was set correctly'))
+        # if there are paths but the scan was not successfully loaded
+        # (e.g., because the specified magnification was unavailable)
+        if not loaded:
+            print(('Warning: A scan was not successfully loaded. '
+                'Check if the magnification was set correctly'))
 
     def __load_thumbail(self, key: tuple[int]) -> None:
         """
         Load thumbnail image on a new thread.
         
         Args:
-            key: index integer to indicate scan for specimen.
+            key: index to indicate scan for specimen.
         """
+        # check if there are any paths 
         path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
         if path is None:
             self.__loaded_images[key] = None
@@ -476,7 +453,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Apply changes to widgets when the previous or next specimen is selected.
         """
-        # reset instance variables for specific specimen and sort its slides
+        # reset instance variables for specific specimen
         self.__specimen = self.__specimens[self.__specimen_index]
 
         # apply default selection mode (all are selected or deselected)
@@ -489,12 +466,12 @@ class SelectionWindow(QtWidgets.QWidget):
             i for i, scan in enumerate(self.__specimen.scans) if scan.selected
         ] 
 
-        # remove keys from set of requests
+        # remove keys from set of requests if they are loaded now
         for key in self.__loaded_images:
             if key in self.__requested:
                 self.__requested.remove(key)
 
-        # remove all loaded images from other specimen
+        # remove all loaded images from specimens outside the buffer range
         before, after = self.__specimen_buffer
         indices = [self.__specimen_index+i for i in range(-before, after+1)]
         indices = [i for i in indices if i >= 0 and i < len(self.__specimens)]
@@ -502,9 +479,9 @@ class SelectionWindow(QtWidgets.QWidget):
             k: v for (k, v) in self.__loaded_images.items() if k[0] in indices
         }
 
-        # load thumbnail images for current specimen   
+        # load thumbnail images for current specimen if they are not yet loaded   
         for scan_index in range(len(self.__specimen.scans)):
-            key = (self.__specimen_index, scan_index)
+            key = (self.__specimen_index, scan_index, False)
             if key not in self.__loaded_images:
                 path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
                 self.__loaded_images[key] = QtGui.QPixmap(path)
@@ -512,13 +489,22 @@ class SelectionWindow(QtWidgets.QWidget):
         if self.__multithreading:
             # put keys in the queue for which the workers load the thumbnail images   
             for specimen_index in indices:
-                priority = abs(self.__specimen_index-specimen_index)*10
+                priority = abs(self.__specimen_index-specimen_index)
                 for scan_index in range(len(self.__specimens[specimen_index].scans)):
-                    key = (specimen_index, scan_index)
+                    # request thumbnail images to be loaded
+                    key = (specimen_index, scan_index, False)
                     if key not in self.__loaded_images:
                         if key not in self.__requested:
                             self.__queue.put((priority, key))
                             self.__requested.append(key)
+                    # request higher magnification images to be loaded
+                    if self.__load_high_magnification:
+                        key = (specimen_index, scan_index, True)
+                        if key not in self.__loaded_images:
+                            if key not in self.__requested:
+                                low_priority = (priority+max(self.__specimen_buffer)+1)
+                                self.__queue.put((low_priority, key))
+                                self.__requested.append(key)
 
         # set case and info label
         case = (f'{self.__specimen.pa_number}-{self.__specimen.specimen_numbers}'
@@ -541,7 +527,8 @@ class SelectionWindow(QtWidgets.QWidget):
                     self.__scan_buttons[i].hide()
                 else:
                     # add thumbnail image to button
-                    pixmap = self.__loaded_images[(self.__specimen_index, i)]
+                    key = (self.__specimen_index, i, False)
+                    pixmap = self.__loaded_images[key]
                     button_size = int((1-2*self.__correction_fraction)*self.__button_size)
                     if pixmap is None:
                         self.__scan_buttons[i].background.clear()
@@ -596,10 +583,12 @@ class SelectionWindow(QtWidgets.QWidget):
                             message += 's'
                     else:
                         message = ''
+
                     self.__scan_buttons[i].IHC_label.setText(message)
-                    self.__scan_buttons[i].specimen_label.setText(
-                        f' {number2roman(scan.slide.specimen_number)} {scan.slide.block}'
-                    )                    
+                    self.__scan_buttons[i].specimen_label.setText((
+                        f' {number2roman(scan.slide.specimen_number)}'
+                        f' {scan.slide.block}'
+                    ))                    
                     self.__scan_buttons[i].staining_label.setText(
                         f' {scan.slide.staining}'
                     )     
@@ -623,7 +612,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # correct for changing the number of scan buttons visible
         self.__scroll_frame_buttons.adjustSize()
 
-        # set the first selected image (or the first image if none are selected yet)
+        # initialize the image viewer with the first visible image
         if first_visible is not None:
             self.__set_image(first_visible)
 
@@ -727,7 +716,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # wait for threads to finish
         if self.__multithreading:
             for _ in range(self.__workers):
-                self.__queue.put((1, 'terminate'))
+                self.__queue.put((-1, 'terminate'))
 
             for t in self.__threads:
                 t.join()
@@ -736,6 +725,10 @@ class SelectionWindow(QtWidgets.QWidget):
 
 
 class SelectionTool:
+    """
+    Implementation of selection tool class for 
+    configuring window and application mainloop.
+    """
 
     def __init__(
         self,
