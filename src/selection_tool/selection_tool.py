@@ -111,9 +111,9 @@ class SelectionWindow(QtWidgets.QWidget):
     # define other tool settings
     __magnification = 5
     __background_color = (245,245,245)
-    __specimen_buffer = (3,5)
+    __specimen_buffer = (3,10)
     __select_non_HE = False
-    __workers = 8
+    __workers = 2
 
     def __init__(
         self, 
@@ -151,9 +151,15 @@ class SelectionWindow(QtWidgets.QWidget):
         ]
         self.__max_buttons = max([len(specimen.scans) for specimen in self.__specimens])
         self.__button_size = int(self.__button_fraction*self.__screen_size[0])
-        self.__specimen_index = 0
         self.__loaded_images = {}
         self.__requested = []
+        self.__specimen_index = 0
+        # check if scans are already selected, if so, continue at the last specimen
+        if 'selected_scans' in self.__df:
+            for i, selection in enumerate(self.__df['selected_scans']):
+                print(selection)
+                if selection is not None:
+                    self.__specimen_index = i
 
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
@@ -178,6 +184,28 @@ class SelectionWindow(QtWidgets.QWidget):
                 flag = 'HE' if self.__is_HE(scan.slide.staining) else 'IHC'
                 if flag not in scan.flags:
                     scan.flags.append(flag)
+
+        # prepare queue and workers for multithreading
+        if self.__multithreading:
+            # initialize threads
+            self.__queue = queue.PriorityQueue()
+            
+            # define worker
+            def worker():
+                while True:
+                    _, key = self.__queue.get()
+                    if key == 'terminate':
+                        break
+                    else:
+                        self.__load_thumbail(key)
+                        self.__queue.task_done()
+
+            # create workers
+            self.__threads = []
+            for _ in range(self.__workers):
+                self.__threads.append(threading.Thread(target=worker))
+                self.__threads[-1].daemon = True
+                self.__threads[-1].start()
 
         # initialize widgets in the window
         self.setWindowTitle('Selection tool')
@@ -269,7 +297,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define information label
         self.__info_label = QtWidgets.QLabel()
-        self.__info_label.setFont(QtGui.QFont('DM Sans', 8))
+        self.__info_label.setFont(QtGui.QFont('DM Sans', 9))
         self.__info_label.setWordWrap(True)
         self.__info_label.setMargin(10)
         self.__info_label.setAlignment(QtCore.Qt.AlignmentFlag.AlignJustify)
@@ -361,20 +389,21 @@ class SelectionWindow(QtWidgets.QWidget):
         Args:
             scan_index: index integer to indicate scan for specimen.
         """        
-        # check if the higher magnification image is already in memory
+        # get the image
         key = (self.__specimen_index, scan_index)
-        if key in self.__loaded_images:
-            # get and set the pixmap
-            self.__image_viewer.setImage(self.__loaded_images[key])
+        pixmap = self.__loaded_images[key]
+        # check if a pixmap is available
+        if pixmap is None:
+            self.__image_viewer.clearImage()
+            self.__image_viewer.setStyleSheet(qdarktheme.load_stylesheet('light'))
+        else:
+            # set the pixmap
+            self.__image_viewer.setImage(pixmap)
             self.__image_viewer.setStyleSheet(
                 f'background-color: rgb{self.__background_color}',
             )
             self.__image_viewer.clearZoom()
         
-        else: 
-            self.__image_viewer.clearImage()
-            self.__image_viewer.setStyleSheet(qdarktheme.load_stylesheet('light'))
-            return
 
     # def __load_image(self, key: tuple[int]) -> None:
     #     """
@@ -426,17 +455,20 @@ class SelectionWindow(QtWidgets.QWidget):
             key: index integer to indicate scan for specimen.
         """
         path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
-        array = sitk.GetArrayFromImage(sitk.ReadImage(path))
-        height, width, _ = array.shape
-        bytes_per_line = 3 * width
-        pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
-            array.copy(), 
-            width, 
-            height, 
-            bytes_per_line, 
-            QtGui.QImage.Format_RGB888,
-        ))
-        self.__loaded_images[key] = pixmap
+        if path is None:
+            self.__loaded_images[key] = None
+        else:
+            array = sitk.GetArrayFromImage(sitk.ReadImage(path))
+            height, width, _ = array.shape
+            bytes_per_line = 3 * width
+            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
+                array.copy(), 
+                width, 
+                height, 
+                bytes_per_line, 
+                QtGui.QImage.Format_RGB888,
+            ))
+            self.__loaded_images[key] = pixmap
 
     def __change_widgets(self) -> None:
         """
@@ -474,29 +506,16 @@ class SelectionWindow(QtWidgets.QWidget):
             if key not in self.__loaded_images:
                 path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
                 self.__loaded_images[key] = QtGui.QPixmap(path)
-
+        
         if self.__multithreading:
-            # define workers
-            def worker():
-                while True:
-                    key = q.get()
-                    self.__load_thumbail(key)
-                    q.task_done()
-
-            # initialize threads
-            q = queue.Queue()
-            for _ in range(self.__workers):
-                t = threading.Thread(target=worker)
-                t.daemon = True
-                t.start()
-            
             # put keys in the queue for which the workers load the thumbnail images   
             for specimen_index in indices:
+                priority = abs(self.__specimen_index-specimen_index)*10
                 for scan_index in range(len(self.__specimens[specimen_index].scans)):
                     key = (specimen_index, scan_index)
                     if key not in self.__loaded_images:
                         if key not in self.__requested:
-                            q.put(key)
+                            self.__queue.put((priority, key))
                             self.__requested.append(key)
 
         # set case and info label
@@ -522,11 +541,14 @@ class SelectionWindow(QtWidgets.QWidget):
                     # add thumbnail image to button
                     pixmap = self.__loaded_images[(self.__specimen_index, i)]
                     button_size = int((1-2*self.__correction_fraction)*self.__button_size)
-                    if pixmap.width() > pixmap.height():
-                        scaled_pixmap = pixmap.scaledToWidth(button_size)
+                    if pixmap is None:
+                        self.__scan_buttons[i].background.clear()
                     else:
-                        scaled_pixmap = pixmap.scaledToHeight(button_size)
-                    self.__scan_buttons[i].background.setPixmap(scaled_pixmap)
+                        if pixmap.width() > pixmap.height():
+                            scaled_pixmap = pixmap.scaledToWidth(button_size)
+                        else:
+                            scaled_pixmap = pixmap.scaledToHeight(button_size)
+                        self.__scan_buttons[i].background.setPixmap(scaled_pixmap)
                     
                     # set all buttons to the correct initial state
                     if i in self.__scan_indices:
@@ -699,6 +721,15 @@ class SelectionWindow(QtWidgets.QWidget):
         Overwritten close event to save selection information
         """
         self.__save_selection()
+
+        # wait for threads to finish
+        if self.__multithreading:
+            for _ in range(self.__workers):
+                self.__queue.put((1, 'terminate'))
+
+            for t in self.__threads:
+                t.join()
+
         return super().closeEvent(a0)
 
 class SelectionTool:
