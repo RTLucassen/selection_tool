@@ -101,7 +101,7 @@ class QtImageViewer(QGraphicsView):
     # !!! setMouseTracking(True) if you want to use this at all times.
     mousePositionOnImageChanged = pyqtSignal(QPoint)
 
-    def __init__(self):
+    def __init__(self, reverse_zoom=False):
         QGraphicsView.__init__(self)
 
         # Image is displayed as a QPixmap in a QGraphicsScene attached to this QGraphicsView.
@@ -131,6 +131,7 @@ class QtImageViewer(QGraphicsView):
         self.zoomOutButton = Qt.MouseButton.RightButton  # Pop end of zoom stack (double click clears zoom stack).
         self.panButton = Qt.MouseButton.MiddleButton  # Drag to pan.
         self.wheelZoomFactor = 1.25  # Set to None or 1 to disable mouse wheel zoom.
+        self.reverse_zoom_factor = -1 if reverse_zoom else 1
 
         # Stack of QRectF zoom boxes in scene coordinates.
         # !!! If you update this manually, be sure to call updateViewer() to reflect any changes.
@@ -366,7 +367,7 @@ class QtImageViewer(QGraphicsView):
         if self.wheelZoomFactor is not None:
             if self.wheelZoomFactor == 1:
                 return
-            if event.angleDelta().y() < 0:
+            if self.reverse_zoom_factor * event.angleDelta().y() < 0:
                 # zoom in
                 if len(self.zoomStack) == 0:
                     self.zoomStack.append(self.sceneRect())

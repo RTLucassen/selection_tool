@@ -110,9 +110,11 @@ class SelectionWindow(QtWidgets.QWidget):
     __magnification = 5.00
     __load_high_magnification = True
     __background_color = (245,245,245)
-    __specimen_buffer = (1,5)
+    __specimen_buffer = (1,10)
     __select_non_HE = True
     __workers = 2
+    # define usability settings
+    __reverse_zoom = True
 
     def __init__(
         self, 
@@ -152,6 +154,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__button_size = int(self.__button_fraction*self.__screen_size[0])
         self.__loaded_images = {}
         self.__requested = []
+        self.__specimen = None
         self.__specimen_index = 0
 
         # if scans were already selected, continue at the last specimen
@@ -265,9 +268,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # define case label
         self.__case_label = QtWidgets.QLabel()
         self.__case_label.setFont(QtGui.QFont('DM Sans', 32))
-        self.__case_label.setTextInteractionFlags(
-            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse,
-        )
+        self.__case_label.mousePressEvent = self.__copy
 
         # define next case button
         self.__next_button = QtWidgets.QPushButton()
@@ -293,7 +294,7 @@ class SelectionWindow(QtWidgets.QWidget):
         )
 
         # define image visualization frame
-        self.__image_viewer = QtImageViewer()
+        self.__image_viewer = QtImageViewer(self.__reverse_zoom)
         self.__image_viewer.regionZoomButton = None
         self.__image_viewer.zoomOutButton = QtCore.Qt.MouseButton.RightButton
         self.__image_viewer.panButton = QtCore.Qt.MouseButton.LeftButton
@@ -347,6 +348,17 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__widget_layout.addWidget(self.__textbox, 2, 2, 1, 3)
         
         self.__change_widgets()
+
+    def __copy(self, event):
+        """
+        Copy pa_number to clipboard after right mouse button click.
+        """
+        # check if the right mouse button was used for clicking
+        if event.button() == 2:
+            pa_number = self.__specimens[self.__specimen_index].pa_number
+            cb = QtWidgets.QApplication.clipboard()
+            cb.clear(mode=cb.Clipboard)
+            cb.setText(pa_number, mode=cb.Clipboard)
 
     def __set_image(self, scan_index: int) -> None:
         """
