@@ -16,10 +16,14 @@
 General utility functions for selection tool.
 """
 
+import numpy as np
+
+from time import perf_counter
+
 def is_HE(staining: str) -> bool:
     return True if 'he' in staining.lower() else False
 
-def calculate_window_geometry(
+def get_window_geometry(
     screen_size: tuple[int], 
     fraction: float,
 ) -> tuple[int]:
@@ -41,6 +45,29 @@ def calculate_window_geometry(
     vertical_offset = (screen_size[1]-height)/2
 
     return (int(horizontal_offset), int(vertical_offset), int(width), int(height))
+
+def get_background_color(
+    array: np.ndarray, 
+    percentile: float = 85.0,
+) -> list[int]:
+    """
+    Calculate the background color from the border of the image.
+
+    Args:
+        array: RGB image data.
+
+    Returns:
+        background_color: RGB-values for background color.
+    """
+    outside = np.concatenate([
+        array[0, :, :].reshape((-1, 3)),
+        array[-1, :, :].reshape((-1, 3)),
+        array[:, 0, :].reshape((-1, 3)),
+        array[:, -1, :].reshape((-1, 3)),
+    ])
+    background_color = str(tuple(np.percentile(outside, percentile, axis=0)))
+
+    return background_color
 
 def number2roman(number: str) -> str:
     """
