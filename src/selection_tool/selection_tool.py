@@ -468,18 +468,19 @@ class SelectionWindow(QtWidgets.QWidget):
                 array = sitk.GetArrayFromImage(sitk.ReadImage(path))
             except:
                 self.__loaded_images[key] = None
-            # convert image to pixmap
-            height, width, _ = array.shape
-            bytes_per_line = 3 * width
-            pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
-                array.copy(), 
-                width, 
-                height, 
-                bytes_per_line, 
-                QtGui.QImage.Format_RGB888,
-            ))
-            self.__background_colors[key] = calculate_background_color(array)
-            self.__loaded_images[key] = pixmap
+            else:
+                # convert image to pixmap
+                height, width, _ = array.shape
+                bytes_per_line = 3 * width
+                pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
+                    array.copy(), 
+                    width, 
+                    height, 
+                    bytes_per_line, 
+                    QtGui.QImage.Format_RGB888,
+                ))
+                self.__background_colors[key] = calculate_background_color(array)
+                self.__loaded_images[key] = pixmap
 
     def __change_widgets(self) -> None:
         """
