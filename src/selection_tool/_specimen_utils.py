@@ -19,7 +19,7 @@ Utility classes for specimen and slide information.
 import re
 from pathlib import Path
 from natsort import natsorted
-from ._general_utils import is_HE
+from ._general_utils import is_HE, number2roman
 
 
 class Specimen:
@@ -57,7 +57,9 @@ class Specimen:
                 'pa_number were assigned to this specimen.'))
 
         # find all specimen numbers
-        specimen_numbers = list(set([slide.specimen_number for slide in self.slides]))
+        specimen_numbers = list(set([
+            slide.specimen_number for slide in self.__slides
+        ]))
         specimen_numbers = ["''" if s == '' else s for s in specimen_numbers]
         self.__specimen_numbers = ', '.join(natsorted(specimen_numbers))
 
@@ -190,7 +192,7 @@ class Slide:
     
     @property
     def specimen_number(self):
-        return self.__slide_information['specimen_nr']
+        return number2roman(self.__slide_information['specimen_nr'])
 
     @property
     def block(self):

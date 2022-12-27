@@ -39,7 +39,7 @@ from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
-from ._general_utils import is_HE, calculate_window_geometry, number2roman
+from ._general_utils import is_HE, calculate_window_geometry
 from . import fonts
 
 
@@ -598,7 +598,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
                     self.__scan_buttons[i].IHC_label.setText(message)
                     self.__scan_buttons[i].specimen_label.setText((
-                        f' {number2roman(scan.slide.specimen_number)}'
+                        f' {scan.slide.specimen_number}'
                         f' {scan.slide.block}'
                     ))                    
                     self.__scan_buttons[i].staining_label.setText(
