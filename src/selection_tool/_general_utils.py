@@ -23,7 +23,7 @@ from time import perf_counter
 def is_HE(staining: str) -> bool:
     return True if 'he' in staining.lower() else False
 
-def get_window_geometry(
+def calculate_window_geometry(
     screen_size: tuple[int], 
     fraction: float,
 ) -> tuple[int]:
@@ -46,7 +46,7 @@ def get_window_geometry(
 
     return (int(horizontal_offset), int(vertical_offset), int(width), int(height))
 
-def get_background_color(
+def calculate_background_color(
     array: np.ndarray, 
     percentile: float = 85.0,
 ) -> list[int]:
@@ -59,6 +59,7 @@ def get_background_color(
     Returns:
         background_color: RGB-values for background color.
     """
+    start = perf_counter()
     outside = np.concatenate([
         array[0, :, :].reshape((-1, 3)),
         array[-1, :, :].reshape((-1, 3)),
@@ -66,7 +67,7 @@ def get_background_color(
         array[:, -1, :].reshape((-1, 3)),
     ])
     background_color = str(tuple(np.percentile(outside, percentile, axis=0)))
-
+    print(perf_counter()-start)
     return background_color
 
 def number2roman(number: str) -> str:

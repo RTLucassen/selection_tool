@@ -39,7 +39,7 @@ from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
-from ._general_utils import is_HE, get_window_geometry, get_background_color
+from ._general_utils import is_HE, calculate_window_geometry, calculate_background_color
 from . import fonts
 
 
@@ -217,7 +217,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # configure window
         self.setWindowTitle('Selection tool')
         self.setGeometry(
-            *get_window_geometry(self.__screen_size, self.__window_fraction),
+            *calculate_window_geometry(self.__screen_size, self.__window_fraction),
         )
 
         # define and connect keyboard shortcut
@@ -361,6 +361,16 @@ class SelectionWindow(QtWidgets.QWidget):
             cb.clear(mode=cb.Clipboard)
             cb.setText(pa_number, mode=cb.Clipboard)
 
+    def __get_background_color(self, key: tuple[int, int, bool]) -> str:
+        """
+        Get the background color from the dictionary. 
+        Return None if the key is not in the dictionary>
+        """
+        if key in self.__background_colors:
+            return self.__background_colors[key]
+        else:
+            return None
+        
     def __set_image(self, scan_index: int) -> None:
         """
         Set an image in the main image viewer.
@@ -384,19 +394,14 @@ class SelectionWindow(QtWidgets.QWidget):
                 qdarktheme.load_stylesheet('light'),
             )
         else:
-            # get the background color
-            if key in self.__background_colors:
-                background_color = self.__background_colors[key]
-            else:
-                background_color = self.__default_background_color
             # set the pixmap
             self.__image_viewer.setImage(pixmap)
             self.__image_viewer.setStyleSheet(
-                f'background-color: rgb{background_color}',
+                f'background-color: rgb{self.__get_background_color(key)}',
             )
             self.__image_viewer.clearZoom()
         
-    def __load_image(self, key: tuple[int]) -> None:
+    def __load_image(self, key: tuple[int, int, bool]) -> None:
         """
         Load higher magnification image on another thread.
         
@@ -446,7 +451,7 @@ class SelectionWindow(QtWidgets.QWidget):
             print(('Warning: A scan was not successfully loaded. '
                 'Check if the magnification was set correctly'))
 
-    def __load_thumbail(self, key: tuple[int]) -> None:
+    def __load_thumbail(self, key: tuple[int, int, bool]) -> None:
         """
         Load thumbnail image on a new thread.
         
@@ -468,7 +473,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 bytes_per_line, 
                 QtGui.QImage.Format_RGB888,
             ))
-            self.__background_colors[key] = get_background_color(array)
+            self.__background_colors[key] = calculate_background_color(array)
             self.__loaded_images[key] = pixmap
 
     def __change_widgets(self) -> None:
@@ -503,7 +508,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__background_colors = {
             k: v for (k, v) in self.__background_colors.items() if k[0] in indices
         }
-        print(self.__background_colors)
+
         # load thumbnail images for current specimen if they are not yet loaded   
         for scan_index in range(len(self.__specimen.scans)):
             key = (self.__specimen_index, scan_index, False)
@@ -564,12 +569,6 @@ class SelectionWindow(QtWidgets.QWidget):
                             scaled_pixmap = pixmap.scaledToHeight(button_size)
                         self.__scan_buttons[i].background.setPixmap(scaled_pixmap)
                     
-                    # get the background color
-                    if key in self.__background_colors:
-                        background_color = self.__background_colors[key]
-                    else:
-                        background_color = self.__default_background_color
-
                     # set all buttons to the correct initial state
                     if i in self.__scan_indices:
                         self.__scan_buttons[i].button.setEnabled(True)
@@ -578,7 +577,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             ' border: 5px solid rgb(100,180,100)'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{background_color}'
+                            f'background-color: rgb{self.__get_background_color(key)}'
                         )
                         if first_selected is None:
                             first_selected = i
@@ -589,7 +588,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             'border: 1px solid black'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{background_color}'
+                            f'background-color: rgb{self.__get_background_color(key)}'
                         )
                     else:
                         self.__scan_buttons[i].button.setEnabled(True)
@@ -598,7 +597,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             ' border: 2px solid black'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{background_color}'
+                            f'background-color: rgb{self.__get_background_color(key)}'
                         )
 
                     # add specimen and staining information
@@ -655,28 +654,22 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Scan button click action to (de)select a particular scan from a specimen.
         """
-        # get the scan button index 
+        # get the scan button index and key
         scan_index = int(self.sender().objectName())
-        
-        # get the background color
         key = (self.__specimen_index, scan_index, False)
-        if key in self.__background_colors:
-            background_color = self.__background_colors[key]
-        else:
-            background_color = self.__default_background_color
 
         # change the appearance of the selected button
         if scan_index not in self.__scan_indices:
-           
             # deselect all other selection buttons buttons
             if self.__selection_threshold == 1:
                 for i in self.__scan_indices:
+                    other_key = (self.__specimen_index, i, False)
                     self.__scan_buttons[i].button.setStyleSheet((
                         'background-color: transparent;'
                         'border: 2px solid black'
                     ))
                     self.__scan_buttons[i].background.setStyleSheet(
-                        f'background-color: rgb{background_color}'
+                        f'background-color: rgb{self.__get_background_color(other_key)}'
                     )
                 self.__scan_indices = []
 
@@ -689,7 +682,7 @@ class SelectionWindow(QtWidgets.QWidget):
                     'border: 5px solid rgb(100,180,100)'
                 ))
                 self.__scan_buttons[scan_index].background.setStyleSheet(
-                    f'background-color: rgb{background_color}'
+                    f'background-color: rgb{self.__get_background_color(key)}'
                 )
         else:
             self.__scan_indices.remove(scan_index)
@@ -699,7 +692,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 'border: 2px solid black'
             ))
             self.__scan_buttons[scan_index].background.setStyleSheet(
-                f'background-color: rgb{background_color}'
+                f'background-color: rgb{self.__get_background_color(key)}'
             )
     
     def __next_case(self) -> None:
