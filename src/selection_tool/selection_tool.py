@@ -369,7 +369,7 @@ class SelectionWindow(QtWidgets.QWidget):
         if key in self.__background_colors:
             return self.__background_colors[key]
         else:
-            return None
+            return self.__default_background_color
         
     def __set_image(self, scan_index: int) -> None:
         """
