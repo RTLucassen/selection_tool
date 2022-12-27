@@ -66,7 +66,7 @@ def calculate_background_color(
         array[:, -1, :].reshape((-1, 3)),
     ])
     # calculate the Nth percentile of the intensity values per channel
-    background_color = str(tuple(scipy.stats.mode(outside, axis=0)[0][0]))
+    background_color = str(tuple(scipy.stats.mode(outside, axis=0, keepdims=True)[0][0]))
 
     return background_color
 
