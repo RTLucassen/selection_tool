@@ -629,9 +629,9 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # initialize the image viewer with the first selected or visible image
         if first_selected is not None:
-            print('first selected:', first_selected)
+            self.__set_image(first_selected)
         elif first_visible is not None:
-            print('first visible:', first_visible)
+            self.__set_image(first_visible)
 
     def __on_click(self):
         """
