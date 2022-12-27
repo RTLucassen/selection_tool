@@ -528,6 +528,7 @@ class SelectionWindow(QtWidgets.QWidget):
         
         # configure scan buttons
         first_visible = None
+        first_selected = None
         for i in range(self.__max_buttons):
             # change the button visibility
             if i < len(self.__specimen.scans):
@@ -561,6 +562,8 @@ class SelectionWindow(QtWidgets.QWidget):
                         self.__scan_buttons[i].background.setStyleSheet(
                             f'background-color: rgb{self.__background_color}'
                         )
+                        if first_selected is None:
+                            first_selected = i
                     elif 'IHC' in scan.flags and not self.__select_non_HE:
                         self.__scan_buttons[i].button.setEnabled(False)
                         self.__scan_buttons[i].button.setStyleSheet((
@@ -624,9 +627,11 @@ class SelectionWindow(QtWidgets.QWidget):
         # correct for changing the number of scan buttons visible
         self.__scroll_frame_buttons.adjustSize()
 
-        # initialize the image viewer with the first visible image
-        if first_visible is not None:
-            self.__set_image(first_visible)
+        # initialize the image viewer with the first selected or visible image
+        if first_selected is not None:
+            print('first selected:', first_selected)
+        elif first_visible is not None:
+            print('first visible:', first_visible)
 
     def __on_click(self):
         """
