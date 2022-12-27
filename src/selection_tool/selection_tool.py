@@ -110,7 +110,6 @@ class SelectionWindow(QtWidgets.QWidget):
     __magnification = 5.00
     __load_high_magnification = False
     __default_background_color = (245,245,245)
-    __background_percentile = 80
     __specimen_buffer = (1,10)
     __select_non_HE = True
     __workers = 2
@@ -474,10 +473,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 bytes_per_line, 
                 QtGui.QImage.Format_RGB888,
             ))
-            self.__background_colors[key] = calculate_background_color(
-                array, 
-                self.__background_percentile,
-            )
+            self.__background_colors[key] = calculate_background_color(array)
             self.__loaded_images[key] = pixmap
 
     def __change_widgets(self) -> None:

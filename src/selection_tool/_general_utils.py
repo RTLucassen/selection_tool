@@ -16,6 +16,7 @@
 General utility functions for selection tool.
 """
 
+import scipy
 import numpy as np
 
 
@@ -47,7 +48,6 @@ def calculate_window_geometry(
 
 def calculate_background_color(
     array: np.ndarray, 
-    percentile: float,
 ) -> list[int]:
     """
     Calculate the background color from the border of the image.
@@ -66,7 +66,7 @@ def calculate_background_color(
         array[:, -1, :].reshape((-1, 3)),
     ])
     # calculate the Nth percentile of the intensity values per channel
-    background_color = str(tuple(np.percentile(outside, percentile, axis=0)))
+    background_color = str(tuple(scipy.stats.mode(outside, axis=0)[0][0]))
 
     return background_color
 
