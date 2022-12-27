@@ -18,7 +18,6 @@ General utility functions for selection tool.
 
 import numpy as np
 
-from time import perf_counter
 
 def is_HE(staining: str) -> bool:
     return True if 'he' in staining.lower() else False
@@ -48,7 +47,7 @@ def calculate_window_geometry(
 
 def calculate_background_color(
     array: np.ndarray, 
-    percentile: float = 85.0,
+    percentile: float,
 ) -> list[int]:
     """
     Calculate the background color from the border of the image.
@@ -59,15 +58,16 @@ def calculate_background_color(
     Returns:
         background_color: RGB-values for background color.
     """
-    start = perf_counter()
+    # get the pixels from the outside
     outside = np.concatenate([
         array[0, :, :].reshape((-1, 3)),
         array[-1, :, :].reshape((-1, 3)),
         array[:, 0, :].reshape((-1, 3)),
         array[:, -1, :].reshape((-1, 3)),
     ])
+    # calculate the Nth percentile of the intensity values per channel
     background_color = str(tuple(np.percentile(outside, percentile, axis=0)))
-    print(perf_counter()-start)
+
     return background_color
 
 def number2roman(number: str) -> str:
