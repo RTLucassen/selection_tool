@@ -463,7 +463,12 @@ class SelectionWindow(QtWidgets.QWidget):
         if path is None:
             self.__loaded_images[key] = None
         else:
-            array = sitk.GetArrayFromImage(sitk.ReadImage(path))
+            # load thumbnail image
+            try:
+                array = sitk.GetArrayFromImage(sitk.ReadImage(path))
+            except:
+                self.__loaded_images[key] = None
+            # convert image to pixmap
             height, width, _ = array.shape
             bytes_per_line = 3 * width
             pixmap = QtGui.QPixmap.fromImage(QtGui.QImage(
