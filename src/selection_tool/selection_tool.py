@@ -124,6 +124,7 @@ class SelectionWindow(QtWidgets.QWidget):
         select_by_default: bool,
         multithreading: bool,
         is_HE_function: Callable,
+        autoselect_function: Callable,
         output_path: str,
     ) -> None:
         """
@@ -139,6 +140,9 @@ class SelectionWindow(QtWidgets.QWidget):
                             in the background on different threads.
             is_HE_fuction: function that returns True when straining name 
                            refers to H&E and False otherwise.
+            autoselect_function: function that returns list with boolean for each
+                                 scan for the input specimen indicating whether it
+                                 should be automatically selected or not.
             output_path: path to output file to save the selection results.
         """
         super().__init__()
@@ -171,7 +175,8 @@ class SelectionWindow(QtWidgets.QWidget):
             print(('Warning: The selection threshold was overwritten because'
                 ' all scans are selected by default.'))
 
-        # define attribute for the maximum number of scans that can be selected
+        # define attribute the maximum number of scans that can be selected and
+        # the autoselect function
         if selection_threshold is None:
             self.__selection_threshold = self.__max_buttons
         elif selection_threshold < 1:
@@ -184,11 +189,42 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__is_HE = is_HE if is_HE_function is None else is_HE_function
         for specimen in self.__specimens:
             # sort slides
-            specimen.sort_slides(self.__is_HE)            
+            specimen.sort_slides(self.__is_HE)     
+            # add staining flag       
             for scan in specimen.scans:
                 flag = 'HE' if self.__is_HE(scan.slide.staining) else 'IHC'
                 if flag not in scan.flags:
                     scan.flags.append(flag)
+            
+        # apply autoselect function or default selection depending on mode
+        for specimen in self.__specimens:
+            # check if an autoselect function was provided
+            if autoselect_function is not None:
+                autoselected = autoselect_function(specimen)
+
+                # check if output from the autoselection function is valid
+                # if so, apply the autoselection result
+                if not isinstance(autoselected, list):
+                    raise AssertionError(('The autoselect function should provide'
+                        ' a list with for each scan a boolean indicating whether'
+                        ' the scan is selected or not.'))
+                elif len(autoselected) != len(specimen.scans):
+                    raise AssertionError(('The number of elements in the list'
+                        ' provided by the autoselect function is not equal to the'
+                        ' number of scans for the specimen.'))
+                else:
+                    for scan, selected in zip(specimen.scans, autoselected):
+                        if scan.selected is None:
+                            scan.selected = selected
+                            if selected:
+                                scan.flags.append('automatically selected')
+
+            # apply default selection mode (all are selected or deselected)
+            for scan in specimen.scans:
+                if scan.selected is None:
+                    scan.selected = self.__select_by_default
+                    if scan.selected:
+                        scan.flags.append('automatically selected')
 
         # prepare queue and workers if multithreading is used
         if self.__multithreading:
@@ -489,11 +525,6 @@ class SelectionWindow(QtWidgets.QWidget):
         # reset instance variables for specific specimen
         self.__specimen = self.__specimens[self.__specimen_index]
 
-        # apply default selection mode (all are selected or deselected)
-        for scan in self.__specimen.scans:
-            if scan.selected is None:
-                scan.selected = self.__select_by_default
-
         # get the indices of all selected slides
         self.__scan_indices = [
             i for i, scan in enumerate(self.__specimen.scans) if scan.selected
@@ -736,6 +767,9 @@ class SelectionWindow(QtWidgets.QWidget):
                 scan.selected = True
             else:
                 scan.selected = False
+                # remove the autoselected flag for scans deselected by the user
+                if 'automatically selected' in scan.flags:
+                    scan.flags.remove('automatically selected')
 
     def __save_selection(self) -> None:
         """
@@ -780,6 +814,7 @@ class SelectionTool:
         select_by_default: bool = False,
         multithreading: bool = True,
         is_HE_function: Callable = None,
+        autoselect_function: Callable = None,
         output_path: str = 'results.json',
     ) -> None:
         """
@@ -794,6 +829,9 @@ class SelectionTool:
                             in the background on different threads.
             is_HE_fuction: function that returns True when straining name 
                            refers to H&E and False otherwise.
+            autoselect_function: function that returns list with boolean for each
+                                 scan for the input specimen indicating whether it
+                                 should be automatically selected or not.
             output_path: path to output file to save the selection results.
         """
         app = QtWidgets.QApplication(sys.argv)
@@ -819,6 +857,7 @@ class SelectionTool:
             select_by_default,
             multithreading,
             is_HE_function,
+            autoselect_function,
             output_path,
         )
         win.show()
