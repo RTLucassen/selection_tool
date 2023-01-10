@@ -5,7 +5,7 @@ A graphical user interface for selection of WSI scans in Python using
 ## Installing the Selection Tool
 The WSI selection tool can be installed from GitHub:
 ```console
-$ pip install git+https://github.com/RTLucassen/slide_selection_tool
+$ pip install git+https://github.com/RTLucassen/selection_tool
 ```
 
 ## Example
@@ -17,27 +17,31 @@ from selection_tool import SelectionTool
 # load dataframe with 
 df = pd.load_json(r'path/to/file.json')
 
-# start the selecting WSI scans
+# start selecting WSI scans
 SelectionTool(df)
 ```
 
 ## Input
 The tool expects a Pandas dataframe as input. This dataframe should at least 
-have two columns, 'description' and 'slides', with as rows the information 
-for each specimen. The 'description' (str) is displayed on the right side 
-of the window to provide the user with more information about the specimen.
-The 'slides' (dict) contains all other information about the specimen, such as
-the paths to all scans and the staining type. 
+have two columns, `description` and `slides`, with as rows the information 
+for each specimen. Other columns are not used by the selection tool,
+but if given as part of the input dataframe, 
+extra columns will also be included in the output file.
+- Each item in the `description` column should be a string with more information about the specimen,
+which is displayed to the user on the right side of the window.
+- Each item in the `slides` column should be a dictionary containing 
+all other information about the specimen, including the pa_number,
+specimen number, block number, staining type, and paths to all images. 
 A minimum example is provided below:
 ```
-example_dictionary = {
+example_slides = {
     'slides': [{
         'pa_number': 'T23-00001', 
         'specimen_nr': 'I', 
         'block': '1', 
         'staining': 'HE', 
         'scan': [{
-            'base_dir': 'C:\Users\path\to\directory', 
+            'base_dir': r'C:\Users\path\to\directory', 
             'files': {
                 'THUMBNAIL_PACS': ['thumbnail.jpeg'],
                 'SLIDE': [
@@ -47,25 +51,30 @@ example_dictionary = {
                     'slide.1.dcm',
                 ],
             }
-        },
-        {
-        'pa_number': 'T23-00002', 
-        'specimen_nr': 'II', 
+        }],
+    },
+    {
+        'pa_number': 'T23-00001', 
+        'specimen_nr': 'I', 
         'block': '1', 
         'staining': 'SOX10', 
         'scan': [{
-            'base_dir': 'C:\Users\path\to\directory', 
+            'base_dir': r'C:\Users\path\to\directory', 
             'files': {
                 'THUMBNAIL_PACS': ['thumbnail.jpeg'],
                 'SLIDE': ['slide.ndpi'],
             },
-            {
-            'base_dir': 'C:\Users\path\to\directory', 
+        },
+        {
+            'base_dir': r'C:\Users\path\to\directory', 
             'files': {
-                'THUMBNAIL_PACS': ['thumbnail.jpeg'],
+                'THUMBNAIL_PACS': ['thumbnail_v2.jpeg'],
                 'SLIDE': ['slide_v2.ndpi'],
             }
         }],
     }],
 }
 ```
+The example dictionary above contains the information for two slides.
+The first slide has one scan, which is stored as a DICOM file (with each magnification level as a separate image) and a JPEG thumbnail.
+The second slide has two scans, which are both stored as NDPI files with JPEG thumbnails.
