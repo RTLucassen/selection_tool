@@ -244,10 +244,10 @@ class Scan:
         else:
             self.selected = None
 
-        if 'rank' in scan_information:
-            self.rank = self.__scan_information['rank']
+        if 'score' in scan_information:
+            self.score = self.__scan_information['score']
         else:
-            self.rank = None
+            self.score = None
 
         if 'flags' in scan_information:
             self.flags = self.__scan_information['flags']
@@ -261,7 +261,7 @@ class Scan:
     @property
     def information(self):
         self.__scan_information['selected'] = self.selected
-        self.__scan_information['rank'] = self.rank
+        self.__scan_information['score'] = self.score
         self.__scan_information['flags'] = self.flags
         return self.__scan_information
 
