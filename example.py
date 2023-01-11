@@ -166,7 +166,6 @@ SelectionTool(
     selection_threshold=None,
     multithreading=True,
     select_by_default=False,
-    select_score=False,
     output_path=os.path.join(example_directory, 'selection_results.json'),
 )
 

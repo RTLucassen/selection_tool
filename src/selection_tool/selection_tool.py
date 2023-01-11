@@ -112,16 +112,16 @@ class SelectionWindow(QtWidgets.QWidget):
     """
     # define widget settings
     __window_fraction = 0.65
-    __button_fraction = 0.10
+    __button_fraction = 0.08
     __padding_button = 0.028
-    __info_fraction = 0.17
+    __info_fraction = 0.15
     __padding_info = 0.032
     __correction_fraction = 0.03
-    __default_background_color = (245,245,245)
+    __default_background_color = (245, 245, 245)
     # define other tool settings
     __select_non_HE = True
     __magnification = 5.00
-    __load_high_magnification = False
+    __load_higher_magnification = False
     __specimen_buffer = (1,10)
     __workers = 2
     # define usability settings
@@ -133,7 +133,6 @@ class SelectionWindow(QtWidgets.QWidget):
         screen_size: tuple[int],
         selection_threshold: int,
         select_by_default: bool,
-        select_score: bool,
         multithreading: bool,
         is_HE_function: Callable,
         autoselect_function: Callable,
@@ -148,8 +147,6 @@ class SelectionWindow(QtWidgets.QWidget):
             selection_threshold: maximum number of selectable scans per specimen.
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
-            select_score: specifies whether selected scans also get an importance score.
-                         (in the order of selection from low to high)
             multithreading: specifies whether higher magnification images are loaded
                             in the background on different threads.
             is_HE_fuction: function that returns True when straining name 
@@ -185,7 +182,6 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
-        self.__select_score = select_score
         if self.__select_by_default and selection_threshold is not None:
             selection_threshold = None
             print(('Warning: The selection threshold was overwritten because'
@@ -345,6 +341,21 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__HE_checkbox.stateChanged.connect(
             lambda: [self.__store_selection(), self.__change_widgets()],
         )
+        self.__score_checkbox = QtWidgets.QCheckBox()
+        self.__score_checkbox.setStyleSheet('font-weight: bold')
+        self.__score_checkbox.setFont(QtGui.QFont('DM Sans', 12))
+        self.__score_checkbox.setText('Score')
+        self.__score_checkbox.setChecked(False)
+        self.__score_checkbox.stateChanged.connect(
+            lambda: [self.__store_selection(), self.__change_widgets()],
+        )
+        # create frame to group buttons and checkboxes
+        self.__settings_frame = QtWidgets.QFrame()
+        self.__settings_layout = QtWidgets.QGridLayout(self.__settings_frame)
+        self.__settings_layout.addWidget(self.__previous_button, 0, 0)
+        self.__settings_layout.addWidget(self.__next_button, 0, 1)
+        self.__settings_layout.addWidget(self.__HE_checkbox, 1, 0)
+        self.__settings_layout.addWidget(self.__score_checkbox, 1, 1)
 
         # define image visualization frame
         self.__image_viewer = QtImageViewer(self.__reverse_zoom)
@@ -392,13 +403,11 @@ class SelectionWindow(QtWidgets.QWidget):
         # create widget layout and add widgets to it
         self.__widget_layout = QtWidgets.QGridLayout(self)
         self.__widget_layout.addWidget(self.__case_label, 0, 0, 1, 2)
-        self.__widget_layout.addWidget(self.__previous_button, 0, 2)
-        self.__widget_layout.addWidget(self.__next_button, 0, 3)
-        self.__widget_layout.addWidget(self.__HE_checkbox, 0, 4)
+        self.__widget_layout.addWidget(self.__settings_frame, 0, 2, 1, 1)
         self.__widget_layout.addWidget(self.__scroll_area_buttons, 1, 0, 2, 1)
         self.__widget_layout.addWidget(self.__image_viewer, 1, 1, 2, 1)
-        self.__widget_layout.addWidget(self.__scroll_area_label, 1, 2, 1, 3)
-        self.__widget_layout.addWidget(self.__textbox, 2, 2, 1, 3)
+        self.__widget_layout.addWidget(self.__scroll_area_label, 1, 2)
+        self.__widget_layout.addWidget(self.__textbox, 2, 2)
         
         self.__change_widgets()
 
@@ -587,7 +596,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             self.__queue.put((priority, key))
                             self.__requested.append(key)
                     # request higher magnification images to be loaded
-                    if self.__load_high_magnification:
+                    if self.__load_higher_magnification:
                         key = (specimen_index, scan_index, True)
                         if key not in self.__loaded_images:
                             if key not in self.__requested:
@@ -756,7 +765,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 self.__scan_buttons[scan_index].background.setStyleSheet(
                     f'background-color: rgb{self.__get_background_color(key)}'
                 )
-                if self.__select_score:
+                if self.__score_checkbox.isChecked():
                     score = max([*list(self.__scoring.values()), 0])+1
                     self.__scan_buttons[scan_index].score_label.setText(f'{score} ')
                     self.__scoring[scan_index] = score
@@ -866,7 +875,6 @@ class SelectionTool:
         df: pd.DataFrame, 
         selection_threshold: int = None,
         select_by_default: bool = False,
-        select_score: bool = False,
         multithreading: bool = True,
         is_HE_function: Callable = None,
         autoselect_function: Callable = None,
@@ -910,7 +918,6 @@ class SelectionTool:
             screen_size, 
             selection_threshold, 
             select_by_default,
-            select_score,
             multithreading,
             is_HE_function,
             autoselect_function,
