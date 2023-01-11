@@ -1,3 +1,12 @@
+"""
+Selection tool demonstration.
+
+Steps:
+1) Four whole slide images are downloaded from the GDC data portal (~2.2GB).
+2) Low magnification thumbnail images are created for each slide.
+3) The selection tool is started using the example dataset that was created.
+"""
+
 import os
 import requests
 import pandas as pd
@@ -8,7 +17,8 @@ from selection_tool import SelectionTool
 
 # specify the directory where the demo folder should be configured
 directory = ''
-data_endpoint = "https://api.gdc.cancer.gov/data/"
+
+# ------------------------------------------------------------------------------
 
 # create demo folder
 demo_directory = os.path.join(directory, 'demo')
@@ -16,6 +26,7 @@ if not os.path.exists(demo_directory):
     os.mkdir(demo_directory)
 
 # define a dictionary with file ids and names to download from GDC data portal
+data_endpoint = "https://api.gdc.cancer.gov/data/"
 files = {
     '2369c69b-2065-4913-bfd9-5d7b0506c1e7': 
         'TCGA-FS-A1ZU-06Z-00-DX3.0C477EE6-C085-42BE-8BAD-E3D6935ABE48.svs',
@@ -155,6 +166,7 @@ SelectionTool(
     selection_threshold=None,
     multithreading=True,
     select_by_default=False,
+    select_score=False,
     output_path=os.path.join(demo_directory, 'selection_results.json'),
 )
 
