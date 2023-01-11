@@ -1,6 +1,11 @@
 # Selection Tool
-A graphical user interface for selection of WSI scans in Python using 
+A graphical user interface for selecting whole slide images (WSIs) in Python using 
 [PyQt5](https://www.riverbankcomputing.com/software/pyqt/).
+
+The layout of the selection tool consists of three main components: 
+- The selection buttons are positioned on the left, showing all WSIs that are available for one specimen at a time. Left-click on a button to select the WSI. 
+- The image viewer in the center displays clicked scans. The scroll wheel can be used to zoom in, the left mouse button to pan around, and the right mouse button to reset the view. Currently, the viewer can only display WSIs at a low or medium magnification.
+- The rightmost column is used to display text descriptions and to add comments.
 
 ## Installing the Selection Tool
 The WSI selection tool can be installed from GitHub:
@@ -17,9 +22,14 @@ from selection_tool import SelectionTool
 # load dataframe with 
 df = pd.load_json(r'path/to/file.json')
 
-# start selecting WSI scans
+# start selecting WSIs
 SelectionTool(df)
 ```
+
+To test the selection tool, we've provided `example.py` in the root of this repository.
+Running this code creates a small dataset by downloading 4 WSIs from the GDC data portal (~2.2GB) 
+and saving corresponding low magnification thumbnail images. 
+The dataset serves as an example to play around with the selection tool.
 
 ## Input
 The tool expects a Pandas dataframe as input. This dataframe should at least 
@@ -32,7 +42,7 @@ which is displayed to the user on the right side of the window.
 - Each item in the `slides` column should be a dictionary containing 
 all other information about the specimen, including the pa_number,
 specimen number, block number, staining type, and paths to all images. 
-A minimum example is provided below:
+A minimal example is provided below:
 ```
 example_slides = {
     'slides': [{
