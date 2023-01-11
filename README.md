@@ -5,7 +5,7 @@ A graphical user interface for selecting whole slide images (WSIs) in Python usi
 The layout of the selection tool consists of three main components: 
 - The selection buttons are positioned on the left, showing all WSIs that are available for one specimen at a time. Left-click on a button to select the WSI. 
 - The image viewer in the center displays clicked scans. The scroll wheel can be used to zoom in, the left mouse button to pan around, and the right mouse button to reset the view. Currently, the viewer can only display WSIs at a low or medium magnification.
-- The rightmost column is used to display text descriptions and to add comments.
+- The text description and comments window are positioned on the right, together with the buttons to go the previous or next case.
 
 ## Installing the Selection Tool
 The WSI selection tool can be installed from GitHub:
