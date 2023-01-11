@@ -1,5 +1,5 @@
 """
-Selection tool demonstration.
+Creates example dataset to test the selection tool.
 
 Steps:
 1) Four whole slide images are downloaded from the GDC data portal (~2.2GB).
@@ -15,15 +15,15 @@ from tqdm import tqdm
 from slideloader import SlideLoader
 from selection_tool import SelectionTool
 
-# specify the directory where the demo folder should be configured
+# specify the directory where the example folder should be configured
 directory = ''
 
 # ------------------------------------------------------------------------------
 
-# create demo folder
-demo_directory = os.path.join(directory, 'demo')
-if not os.path.exists(demo_directory):
-    os.mkdir(demo_directory)
+# create example folder
+example_directory = os.path.join(directory, 'selection_tool_example')
+if not os.path.exists(example_directory):
+    os.mkdir(example_directory)
 
 # define a dictionary with file ids and names to download from GDC data portal
 data_endpoint = "https://api.gdc.cancer.gov/data/"
@@ -56,7 +56,7 @@ slides = [{
         'block': '1', 
         'staining': 'H&E', 
         'scan': [{
-            'base_dir': demo_directory, 
+            'base_dir': example_directory, 
             'files': {
                 'THUMBNAIL': [
                     'TCGA-FS-A1ZU-06Z-00-DX3.0C477EE6-C085-42BE-8BAD-E3D6935ABE48.png',
@@ -73,7 +73,7 @@ slides = [{
         'block': '2', 
         'staining': 'H&E', 
         'scan': [{
-            'base_dir': demo_directory, 
+            'base_dir': example_directory, 
             'files': {
                 'THUMBNAIL': [
                     'TCGA-FS-A1ZU-06Z-00-DX1.3AF5FEC8-DD45-4B7E-B580-20C0F73AC4BB.png',
@@ -92,7 +92,7 @@ slides = [{
         'block': '1', 
         'staining': 'H&E', 
         'scan': [{
-            'base_dir': demo_directory, 
+            'base_dir': example_directory, 
             'files': {
                 'THUMBNAIL': [
                     'TCGA-EB-A44O-01Z-00-DX1.A07646AF-D30D-4C44-B8F6-B81D3F2A4F5D.png',
@@ -109,7 +109,7 @@ slides = [{
         'block': '1', 
         'staining': 'H&E', 
         'scan': [{
-            'base_dir': demo_directory, 
+            'base_dir': example_directory, 
             'files': {
                 'THUMBNAIL': [
                     'TCGA-EB-A44O-06Z-00-DX1.788C33F2-3766-4792-B8DF-52C5F3E8AEDB.png',
@@ -123,9 +123,9 @@ slides = [{
 }]
 df = pd.DataFrame.from_dict({'description': description, 'slides': slides})
 
-# download demo WSI (if necessary)
+# download example WSI (if necessary)
 for file_id, filename in files.items():
-    if not os.path.exists(os.path.join(demo_directory, filename)):
+    if not os.path.exists(os.path.join(example_directory, filename)):
         # create request
         response = requests.get(
             data_endpoint+file_id, 
@@ -138,7 +138,7 @@ for file_id, filename in files.items():
         progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
         
         # start downloading data
-        path = os.path.join(demo_directory, filename)
+        path = os.path.join(example_directory, filename)
         with open(path, "wb") as output_file:
             for data in response.iter_content(block_size):
                 progress_bar.update(len(data))
@@ -152,7 +152,7 @@ for file_id, filename in files.items():
 # create thumbnail images for WSI (if necessary)
 loader = SlideLoader()
 for file_id, filename in files.items():
-    slide_path = os.path.join(demo_directory, filename)
+    slide_path = os.path.join(example_directory, filename)
     thumbnail_path = slide_path.replace('.svs', '.png')
     if not os.path.exists(thumbnail_path):        
         # create low resolution thumbnails
@@ -167,6 +167,6 @@ SelectionTool(
     multithreading=True,
     select_by_default=False,
     select_score=False,
-    output_path=os.path.join(demo_directory, 'selection_results.json'),
+    output_path=os.path.join(example_directory, 'selection_results.json'),
 )
 

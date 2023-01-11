@@ -1,6 +1,6 @@
 selection_tool_venv
+selection_tool_example
 __pycache__
-demo
 
 *.egg-info
 *.json
