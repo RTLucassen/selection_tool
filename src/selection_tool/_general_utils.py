@@ -21,7 +21,10 @@ import numpy as np
 
 
 def is_HE(staining: str) -> bool:
-    return True if 'he' in staining.lower() else False
+    if 'he' in staining.lower() or 'h&e' in staining.lower():
+        return True
+    else:
+        return False
 
 def calculate_window_geometry(
     screen_size: tuple[int], 

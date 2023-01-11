@@ -43,7 +43,7 @@ example_slides = {
         'scan': [{
             'base_dir': r'C:\Users\path\to\directory', 
             'files': {
-                'THUMBNAIL_PACS': ['thumbnail.jpeg'],
+                'THUMBNAIL': ['thumbnail.jpeg'],
                 'SLIDE': [
                     'slide.4.dcm', 
                     'slide.3.dcm', 
@@ -55,20 +55,20 @@ example_slides = {
     },
     {
         'pa_number': 'T23-00001', 
-        'specimen_nr': 'I', 
+        'specimen_nr': 'II', 
         'block': '1', 
         'staining': 'SOX10', 
         'scan': [{
             'base_dir': r'C:\Users\path\to\directory', 
             'files': {
-                'THUMBNAIL_PACS': ['thumbnail.jpeg'],
+                'THUMBNAIL': ['thumbnail.jpeg'],
                 'SLIDE': ['slide.ndpi'],
             },
         },
         {
             'base_dir': r'C:\Users\path\to\directory', 
             'files': {
-                'THUMBNAIL_PACS': ['thumbnail_v2.jpeg'],
+                'THUMBNAIL': ['thumbnail_v2.jpeg'],
                 'SLIDE': ['slide_v2.ndpi'],
             }
         }],

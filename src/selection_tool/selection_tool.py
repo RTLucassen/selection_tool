@@ -31,6 +31,7 @@ import sys
 import queue
 import threading
 import qdarktheme
+import numpy as np
 import pandas as pd
 import SimpleITK as sitk
 from typing import Callable
@@ -56,6 +57,7 @@ class ScanButton(QtWidgets.QWidget):
 
     def __init__(self) -> None:
         """
+        Initialize widgets that are part of each scan button.
         """
         super().__init__()
 
@@ -74,6 +76,14 @@ class ScanButton(QtWidgets.QWidget):
         self.IHC_label.setStyleSheet('background-color: transparent')
         self.IHC_label.setFont(QtGui.QFont('DM Sans', 12))
         self.IHC_label.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignHCenter | QtCore.Qt.AlignmentFlag.AlignTop,
+        )
+        self.rank_label = QtWidgets.QLabel()
+        self.rank_label.setStyleSheet(
+            'background-color: transparent; color: rgb(100,180,100); font-weight: bold',
+        )
+        self.rank_label.setFont(QtGui.QFont('DM Sans', 14))
+        self.rank_label.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignTop,
         )
         self.staining_label = QtWidgets.QLabel()
@@ -88,30 +98,31 @@ class ScanButton(QtWidgets.QWidget):
 
         # configure layout
         self.__widget_layout = QtWidgets.QGridLayout(self)
-        self.__widget_layout.addWidget(self.background, 0, 0, 2, 2)
+        self.__widget_layout.addWidget(self.background, 0, 0, 2, 3)
         self.__widget_layout.addWidget(self.specimen_label, 0, 0, 1, 1)
         self.__widget_layout.addWidget(self.IHC_label, 0, 1, 1, 1)
-        self.__widget_layout.addWidget(self.staining_label, 1, 0, 1, 2)
-        self.__widget_layout.addWidget(self.button, 0, 0, 2, 2)
+        self.__widget_layout.addWidget(self.rank_label, 0, 2, 1, 1)
+        self.__widget_layout.addWidget(self.staining_label, 1, 0, 1, 3)
+        self.__widget_layout.addWidget(self.button, 0, 0, 2, 3)
 
 
 class SelectionWindow(QtWidgets.QWidget):
     """
     Implementation of window for WSI selection.
     """
-    # define widget size settings
+    # define widget settings
     __window_fraction = 0.65
-    __button_fraction = 0.08
+    __button_fraction = 0.10
     __padding_button = 0.028
-    __info_fraction = 0.15
+    __info_fraction = 0.17
     __padding_info = 0.032
     __correction_fraction = 0.03
+    __default_background_color = (245,245,245)
     # define other tool settings
+    __select_non_HE = True
     __magnification = 5.00
     __load_high_magnification = False
-    __default_background_color = (245,245,245)
     __specimen_buffer = (1,10)
-    __select_non_HE = True
     __workers = 2
     # define usability settings
     __reverse_zoom = True
@@ -122,6 +133,7 @@ class SelectionWindow(QtWidgets.QWidget):
         screen_size: tuple[int],
         selection_threshold: int,
         select_by_default: bool,
+        select_rank: bool,
         multithreading: bool,
         is_HE_function: Callable,
         autoselect_function: Callable,
@@ -136,6 +148,8 @@ class SelectionWindow(QtWidgets.QWidget):
             selection_threshold: maximum number of selectable scans per specimen.
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
+            select_rank: specifies whether selected scans also get an importance score.
+                         (in the order of selection from low to high)
             multithreading: specifies whether higher magnification images are loaded
                             in the background on different threads.
             is_HE_fuction: function that returns True when straining name 
@@ -147,7 +161,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         super().__init__()
         # define instance attributes
-        self.__df = df
+        self.__df = df.replace({np.nan:None})
         self.__screen_size = screen_size
         self.__output_path = output_path
         self.__multithreading = multithreading
@@ -161,8 +175,9 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__requested = []
         self.__specimen = None
         self.__specimen_index = 0
+        self.__ranking = {}
 
-        # if scans were already selected, continue at the last specimen
+        # if scans were already selected, continue from the last specimen
         if 'selected_scans' in self.__df:
             for i, selection in enumerate(self.__df['selected_scans']):
                 if selection is not None:
@@ -170,6 +185,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
+        self.__select_rank = select_rank
         if self.__select_by_default and selection_threshold is not None:
             selection_threshold = None
             print(('Warning: The selection threshold was overwritten because'
@@ -504,6 +520,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 array = sitk.GetArrayFromImage(sitk.ReadImage(path))
             except:
                 self.__loaded_images[key] = None
+                print('Warning: Thumbnail image was not successfully loaded.')
             else:
                 # convert image to pixmap
                 height, width, _ = array.shape
@@ -529,6 +546,12 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__scan_indices = [
             i for i, scan in enumerate(self.__specimen.scans) if scan.selected
         ] 
+
+        # get ranking for all selected slides
+        self.__ranking = {}
+        for i, scan in enumerate(self.__specimen.scans):
+            if scan.rank is not None:
+                self.__ranking[i] = scan.rank
 
         # remove keys from set of requests if they are loaded now
         for key in self.__loaded_images:
@@ -606,7 +629,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             scaled_pixmap = pixmap.scaledToHeight(button_size)
                         self.__scan_buttons[i].background.setPixmap(scaled_pixmap)
                     
-                    # set all buttons to the correct initial state
+                    # configure selected button
                     if i in self.__scan_indices:
                         self.__scan_buttons[i].button.setEnabled(True)
                         self.__scan_buttons[i].button.setStyleSheet((
@@ -616,23 +639,32 @@ class SelectionWindow(QtWidgets.QWidget):
                         self.__scan_buttons[i].background.setStyleSheet(
                             f'background-color: rgb{self.__get_background_color(key)}'
                         )
+                        # change ranking label
+                        if i in self.__ranking:
+                            self.__scan_buttons[i].rank_label.setText(f'{scan.rank} ')
+                        else:
+                            self.__scan_buttons[i].rank_label.setText('')
                         if first_selected is None:
                             first_selected = i
+                    # configure disabled IHC button
                     elif 'IHC' in scan.flags and not self.__select_non_HE:
                         self.__scan_buttons[i].button.setEnabled(False)
                         self.__scan_buttons[i].button.setStyleSheet((
                             'background-color: transparent;'
                             'border: 1px solid black'
                         ))
+                        self.__scan_buttons[i].rank_label.setText('')
                         self.__scan_buttons[i].background.setStyleSheet(
                             f'background-color: rgb{self.__get_background_color(key)}'
                         )
+                    # configure unselected buttons
                     else:
                         self.__scan_buttons[i].button.setEnabled(True)
                         self.__scan_buttons[i].button.setStyleSheet((
                             'background-color: transparent;'
                             ' border: 2px solid black'
                         ))
+                        self.__scan_buttons[i].rank_label.setText('')
                         self.__scan_buttons[i].background.setStyleSheet(
                             f'background-color: rgb{self.__get_background_color(key)}'
                         )
@@ -655,8 +687,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
                     self.__scan_buttons[i].IHC_label.setText(message)
                     self.__scan_buttons[i].specimen_label.setText((
-                        f' {scan.slide.specimen_number}'
-                        f' {scan.slide.block}'
+                        f' {scan.slide.specimen_number} {scan.slide.block}'
                     ))                    
                     self.__scan_buttons[i].staining_label.setText(
                         f' {scan.slide.staining}'
@@ -708,7 +739,11 @@ class SelectionWindow(QtWidgets.QWidget):
                     self.__scan_buttons[i].background.setStyleSheet(
                         f'background-color: rgb{self.__get_background_color(other_key)}'
                     )
+                    if i in self.__ranking:
+                        self.__scan_buttons[i].rank_label.setText('')
+                # reset list and dictionary with selected indices and ranks
                 self.__scan_indices = []
+                self.__ranking = {}
 
             # select the clicked button if the threshold was not reached
             if len(self.__scan_indices) < self.__selection_threshold:
@@ -721,7 +756,20 @@ class SelectionWindow(QtWidgets.QWidget):
                 self.__scan_buttons[scan_index].background.setStyleSheet(
                     f'background-color: rgb{self.__get_background_color(key)}'
                 )
+                if self.__select_rank:
+                    rank = max([*list(self.__ranking.values()), 0])+1
+                    self.__scan_buttons[scan_index].rank_label.setText(f'{rank} ')
+                    self.__ranking[scan_index] = rank
         else:
+            # deselect the clicked button
+            if scan_index in self.__ranking:
+                lowest_rank = max(list(self.__ranking.values()))
+                if self.__ranking[scan_index] != lowest_rank:
+                    return
+                else:
+                    self.__scan_buttons[scan_index].rank_label.setText('')
+                    del self.__ranking[scan_index]
+            
             self.__scan_indices.remove(scan_index)
             self.__set_image(scan_index)
             self.__scan_buttons[scan_index].button.setStyleSheet((
@@ -763,6 +811,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # store any comments and which scans were selected 
         self.__specimen.comments = self.__textbox.text()
         for scan_index, scan in enumerate(self.__specimen.scans):
+            # store selection
             if scan_index in self.__scan_indices:
                 scan.selected = True
             else:
@@ -770,6 +819,11 @@ class SelectionWindow(QtWidgets.QWidget):
                 # remove the autoselected flag for scans deselected by the user
                 if 'automatically selected' in scan.flags:
                     scan.flags.remove('automatically selected')
+            # store ranking
+            if scan_index in self.__ranking:
+                scan.rank = self.__ranking[scan_index]
+            else:
+                scan.rank = None
 
     def __save_selection(self) -> None:
         """
@@ -812,6 +866,7 @@ class SelectionTool:
         df: pd.DataFrame, 
         selection_threshold: int = None,
         select_by_default: bool = False,
+        select_rank: bool = False,
         multithreading: bool = True,
         is_HE_function: Callable = None,
         autoselect_function: Callable = None,
@@ -855,6 +910,7 @@ class SelectionTool:
             screen_size, 
             selection_threshold, 
             select_by_default,
+            select_rank,
             multithreading,
             is_HE_function,
             autoselect_function,
