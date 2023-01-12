@@ -344,18 +344,11 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__score_checkbox = QtWidgets.QCheckBox()
         self.__score_checkbox.setStyleSheet('font-weight: bold')
         self.__score_checkbox.setFont(QtGui.QFont('DM Sans', 12))
-        self.__score_checkbox.setText('Score')
+        self.__score_checkbox.setText('Add Score')
         self.__score_checkbox.setChecked(False)
         self.__score_checkbox.stateChanged.connect(
             lambda: [self.__store_selection(), self.__change_widgets()],
         )
-        # create frame to group buttons and checkboxes
-        self.__settings_frame = QtWidgets.QFrame()
-        self.__settings_layout = QtWidgets.QGridLayout(self.__settings_frame)
-        self.__settings_layout.addWidget(self.__previous_button, 0, 0)
-        self.__settings_layout.addWidget(self.__next_button, 0, 1)
-        self.__settings_layout.addWidget(self.__HE_checkbox, 1, 0)
-        self.__settings_layout.addWidget(self.__score_checkbox, 1, 1)
 
         # define image visualization frame
         self.__image_viewer = QtImageViewer(self.__reverse_zoom)
@@ -402,12 +395,15 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # create widget layout and add widgets to it
         self.__widget_layout = QtWidgets.QGridLayout(self)
-        self.__widget_layout.addWidget(self.__case_label, 0, 0, 1, 2)
-        self.__widget_layout.addWidget(self.__settings_frame, 0, 2, 1, 1)
-        self.__widget_layout.addWidget(self.__scroll_area_buttons, 1, 0, 2, 1)
-        self.__widget_layout.addWidget(self.__image_viewer, 1, 1, 2, 1)
-        self.__widget_layout.addWidget(self.__scroll_area_label, 1, 2)
-        self.__widget_layout.addWidget(self.__textbox, 2, 2)
+        self.__widget_layout.addWidget(self.__case_label, 0, 0, 2, 2)
+        self.__widget_layout.addWidget(self.__previous_button, 0, 2)
+        self.__widget_layout.addWidget(self.__next_button, 0, 3)
+        self.__widget_layout.addWidget(self.__HE_checkbox, 1, 2)
+        self.__widget_layout.addWidget(self.__score_checkbox, 1, 3)
+        self.__widget_layout.addWidget(self.__scroll_area_buttons, 2, 0, 2, 1)
+        self.__widget_layout.addWidget(self.__image_viewer, 2, 1, 2, 1)
+        self.__widget_layout.addWidget(self.__scroll_area_label, 2, 2, 1, 2)
+        self.__widget_layout.addWidget(self.__textbox, 3, 2, 1, 2)
         
         self.__change_widgets()
 
