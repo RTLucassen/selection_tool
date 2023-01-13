@@ -27,9 +27,9 @@ SelectionTool(df)
 ```
 
 To test the selection tool, we've provided `example.py` in the root of this repository.
-Running this code creates a small dataset by downloading 4 WSIs from the GDC data portal (~2.2GB) 
+The code in this file code creates a small dataset by downloading 4 WSIs from the GDC data portal (~2.2GB) 
 and saving corresponding low magnification thumbnail images. 
-The dataset serves as an example to play around with the selection tool.
+The dataset then serves as an example to play around with the selection tool.
 
 ## Input
 The tool expects a Pandas dataframe as input. This dataframe should at least 
