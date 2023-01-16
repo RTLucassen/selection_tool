@@ -123,7 +123,7 @@ slides = [{
 }]
 df = pd.DataFrame.from_dict({'description': description, 'slides': slides})
 
-# download example WSI (if necessary)
+# download example WSIs (if necessary)
 for file_id, filename in files.items():
     if not os.path.exists(os.path.join(example_directory, filename)):
         # create request
@@ -149,7 +149,7 @@ for file_id, filename in files.items():
         if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
             raise AssertionError('The file was not successfully downloaded')
 
-# create thumbnail images for WSI (if necessary)
+# create thumbnail images for WSIs (if necessary)
 loader = SlideLoader()
 for file_id, filename in files.items():
     slide_path = os.path.join(example_directory, filename)
