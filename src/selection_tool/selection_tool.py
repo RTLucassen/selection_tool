@@ -49,6 +49,20 @@ FONTS = [
     'DMSans-Regular.ttf',
 ]
 
+class CustomQPushButton(QtWidgets.QPushButton):
+    rightclicked = QtCore.pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+    # overwrite mousePressEvent
+    @QtCore.pyqtSlot()
+    def mousePressEvent(self, event):       
+        super().mousePressEvent(event)
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            if event.button() == QtCore.Qt.RightButton:
+                self.rightclicked.emit()
+
 
 class ScanButton(QtWidgets.QWidget):
     """
@@ -94,7 +108,7 @@ class ScanButton(QtWidgets.QWidget):
         )
 
         # define button widget
-        self.button = QtWidgets.QPushButton()
+        self.button = CustomQPushButton()
 
         # configure layout
         self.__widget_layout = QtWidgets.QGridLayout(self)
@@ -293,7 +307,8 @@ class SelectionWindow(QtWidgets.QWidget):
             scan_button.button.setFixedSize(self.__button_size, self.__button_size)
             scan_button.specimen_label.setMaximumWidth(self.__button_size)
             scan_button.staining_label.setMaximumWidth(self.__button_size)
-            scan_button.button.clicked.connect(self.__on_click)
+            scan_button.button.clicked.connect(self.__on_left_click)
+            scan_button.button.rightclicked.connect(self.__on_right_click)
             self.__scroll_layout_buttons.addWidget(scan_button)
             self.__scan_buttons.append(scan_button)
 
@@ -722,8 +737,8 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__set_image(first_selected)
         else:
             self.__set_image(first_visible)
-        
-    def __on_click(self):
+
+    def __on_left_click(self):
         """
         Scan button click action to (de)select a particular scan from a specimen.
         """
@@ -785,6 +800,14 @@ class SelectionWindow(QtWidgets.QWidget):
                 f'background-color: rgb{self.__get_background_color(key)}'
             )
     
+    def __on_right_click(self):  
+        """
+        Scan button click action to show a particular scan from a specimen.
+        """
+        # get the scan button index and key
+        scan_index = int(self.sender().objectName())
+        self.__set_image(scan_index)
+
     def __next_case(self) -> None:
         """
         Continue to the next case or close the window after the last case.
