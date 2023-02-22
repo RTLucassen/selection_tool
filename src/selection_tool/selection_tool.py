@@ -27,6 +27,7 @@ Scroll wheel:                  zooming in and out
 Right mouse button click:              reset view
 """
 
+import os
 import sys
 import queue
 import threading
@@ -36,7 +37,6 @@ import pandas as pd
 import SimpleITK as sitk
 from typing import Callable
 from PyQt5 import QtWidgets, QtCore, QtGui
-from importlib.resources import files, as_file
 from slideloader import SlideLoader
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
@@ -927,9 +927,8 @@ class SelectionTool:
 
         # load fonts
         for font_file in FONTS:
-            source = files(fonts).joinpath(font_file)
-            with as_file(source) as font_path:
-                QtGui.QFontDatabase.addApplicationFont(str(font_path))
+            font_path = os.path.join(os.path.split(fonts.__file__)[0], font_file)
+            QtGui.QFontDatabase.addApplicationFont(font_path)
 
         # create window
         win = SelectionWindow(
