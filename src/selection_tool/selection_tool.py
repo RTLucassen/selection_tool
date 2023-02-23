@@ -264,9 +264,9 @@ class SelectionWindow(QtWidgets.QWidget):
                     if key == 'terminate':
                         break
                     elif key[2]:
-                        self.__load_image(key)
+                        self._load_image(key)
                     else:
-                        self.__load_thumbail(key)
+                        self._load_thumbail(key)
                     self.__queue.task_done()
 
             # create workers
@@ -284,13 +284,13 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # define and connect keyboard shortcut
         self.__next_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("D"), self)
-        self.__next_shortcut.activated.connect(self.__next_case)
+        self.__next_shortcut.activated.connect(self._next_case)
         self.__previous_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("A"), self)
-        self.__previous_shortcut.activated.connect(self.__previous_case)
+        self.__previous_shortcut.activated.connect(self._previous_case)
 
-        self.__initialize_widgets()
+        self._initialize_widgets()
 
-    def __initialize_widgets(self) -> None:
+    def _initialize_widgets(self) -> None:
         """
         Initialize widgets and position in the window.
         """
@@ -307,8 +307,8 @@ class SelectionWindow(QtWidgets.QWidget):
             scan_button.button.setFixedSize(self.__button_size, self.__button_size)
             scan_button.specimen_label.setMaximumWidth(self.__button_size)
             scan_button.staining_label.setMaximumWidth(self.__button_size)
-            scan_button.button.clicked.connect(self.__on_left_click)
-            scan_button.button.rightclicked.connect(self.__on_right_click)
+            scan_button.button.clicked.connect(self._on_left_click)
+            scan_button.button.rightclicked.connect(self._on_right_click)
             self.__scroll_layout_buttons.addWidget(scan_button)
             self.__scan_buttons.append(scan_button)
 
@@ -332,21 +332,21 @@ class SelectionWindow(QtWidgets.QWidget):
         # define case label
         self.__case_label = QtWidgets.QLabel()
         self.__case_label.setFont(QtGui.QFont('DM Sans', 32))
-        self.__case_label.mousePressEvent = self.__copy
+        self.__case_label.mousePressEvent = self._copy
 
         # define next case button
         self.__next_button = QtWidgets.QPushButton()
         self.__next_button.setStyleSheet('font-weight: bold')
         self.__next_button.setFont(QtGui.QFont('DM Sans', 12))
         self.__next_button.setText('Next')
-        self.__next_button.clicked.connect(self.__next_case)
+        self.__next_button.clicked.connect(self._next_case)
 
         # define next case button
         self.__previous_button = QtWidgets.QPushButton()
         self.__previous_button.setStyleSheet('font-weight: bold')
         self.__previous_button.setFont(QtGui.QFont('DM Sans', 12))
         self.__previous_button.setText('Previous')
-        self.__previous_button.clicked.connect(self.__previous_case)
+        self.__previous_button.clicked.connect(self._previous_case)
 
         self.__HE_checkbox = QtWidgets.QCheckBox()
         self.__HE_checkbox.setStyleSheet('font-weight: bold')
@@ -354,16 +354,14 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__HE_checkbox.setText('Only H&&E')
         self.__HE_checkbox.setChecked(False)
         self.__HE_checkbox.stateChanged.connect(
-            lambda: [self.__store_selection(), self.__change_widgets()],
+            lambda: [self._store_selection(), self._change_widgets()],
         )
         self.__score_checkbox = QtWidgets.QCheckBox()
         self.__score_checkbox.setStyleSheet('font-weight: bold')
         self.__score_checkbox.setFont(QtGui.QFont('DM Sans', 12))
         self.__score_checkbox.setText('Add Score')
         self.__score_checkbox.setChecked(False)
-        self.__score_checkbox.stateChanged.connect(
-            lambda: [self.__store_selection(), self.__change_widgets()],
-        )
+        self.__score_checkbox.stateChanged.connect(self._store_selection)
 
         # define image visualization frame
         self.__image_viewer = QtImageViewer(self.__reverse_zoom)
@@ -420,9 +418,9 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__widget_layout.addWidget(self.__scroll_area_label, 2, 2, 1, 2)
         self.__widget_layout.addWidget(self.__textbox, 3, 2, 1, 2)
         
-        self.__change_widgets()
+        self._change_widgets()
 
-    def __copy(self, event):
+    def _copy(self, event):
         """
         Copy pa_number to clipboard after right mouse button click.
         """
@@ -433,7 +431,7 @@ class SelectionWindow(QtWidgets.QWidget):
             cb.clear(mode=cb.Clipboard)
             cb.setText(pa_number, mode=cb.Clipboard)
 
-    def __get_background_color(self, key: tuple[int, int, bool]) -> str:
+    def _get_background_color(self, key: tuple[int, int, bool]) -> str:
         """
         Get the background color from the dictionary. 
         Return None if the key is not in the dictionary>
@@ -443,7 +441,7 @@ class SelectionWindow(QtWidgets.QWidget):
         else:
             return self.__default_background_color
         
-    def __set_image(self, scan_index: int) -> None:
+    def _set_image(self, scan_index: int) -> None:
         """
         Set an image in the main image viewer.
 
@@ -469,11 +467,11 @@ class SelectionWindow(QtWidgets.QWidget):
             # set the pixmap
             self.__image_viewer.setImage(pixmap)
             self.__image_viewer.setStyleSheet(
-                f'background-color: rgb{self.__get_background_color(key)}',
+                f'background-color: rgb{self._get_background_color(key)}',
             )
             self.__image_viewer.clearZoom()
         
-    def __load_image(self, key: tuple[int, int, bool]) -> None:
+    def _load_image(self, key: tuple[int, int, bool]) -> None:
         """
         Load higher magnification image on another thread.
         
@@ -523,7 +521,7 @@ class SelectionWindow(QtWidgets.QWidget):
             print(('Warning: A scan was not successfully loaded. '
                 'Check if the magnification was set correctly'))
 
-    def __load_thumbail(self, key: tuple[int, int, bool]) -> None:
+    def _load_thumbail(self, key: tuple[int, int, bool]) -> None:
         """
         Load thumbnail image on a new thread.
         
@@ -555,7 +553,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 self.__background_colors[key] = calculate_background_color(array)
                 self.__loaded_images[key] = pixmap
 
-    def __change_widgets(self) -> None:
+    def _change_widgets(self) -> None:
         """
         Apply changes to widgets when the previous or next specimen is selected.
         """
@@ -593,7 +591,7 @@ class SelectionWindow(QtWidgets.QWidget):
         for scan_index in range(len(self.__specimen.scans)):
             key = (self.__specimen_index, scan_index, False)
             if key not in self.__loaded_images:
-                self.__load_thumbail(key)
+                self._load_thumbail(key)
         
         if self.__multithreading:
             # put keys in the queue for which the workers load the thumbnail images   
@@ -657,7 +655,7 @@ class SelectionWindow(QtWidgets.QWidget):
                             ' border: 5px solid rgb(100,180,100)'
                         ))
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__get_background_color(key)}'
+                            f'background-color: rgb{self._get_background_color(key)}'
                         )
                         # change scoring label
                         if i in self.__scoring:
@@ -675,7 +673,7 @@ class SelectionWindow(QtWidgets.QWidget):
                         ))
                         self.__scan_buttons[i].score_label.setText('')
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__get_background_color(key)}'
+                            f'background-color: rgb{self._get_background_color(key)}'
                         )
                     # configure unselected buttons
                     else:
@@ -686,7 +684,7 @@ class SelectionWindow(QtWidgets.QWidget):
                         ))
                         self.__scan_buttons[i].score_label.setText('')
                         self.__scan_buttons[i].background.setStyleSheet(
-                            f'background-color: rgb{self.__get_background_color(key)}'
+                            f'background-color: rgb{self._get_background_color(key)}'
                         )
 
                     # add specimen and staining information
@@ -734,11 +732,11 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # initialize the image viewer with the first selected or visible image
         if first_selected is not None:
-            self.__set_image(first_selected)
+            self._set_image(first_selected)
         else:
-            self.__set_image(first_visible)
+            self._set_image(first_visible)
 
-    def __on_left_click(self):
+    def _on_left_click(self):
         """
         Scan button click action to (de)select a particular scan from a specimen.
         """
@@ -757,7 +755,7 @@ class SelectionWindow(QtWidgets.QWidget):
                         'border: 2px solid black'
                     ))
                     self.__scan_buttons[i].background.setStyleSheet(
-                        f'background-color: rgb{self.__get_background_color(other_key)}'
+                        f'background-color: rgb{self._get_background_color(other_key)}'
                     )
                     if i in self.__scoring:
                         self.__scan_buttons[i].score_label.setText('')
@@ -768,13 +766,13 @@ class SelectionWindow(QtWidgets.QWidget):
             # select the clicked button if the threshold was not reached
             if len(self.__scan_indices) < self.__selection_threshold:
                 self.__scan_indices.append(scan_index)
-                self.__set_image(scan_index)
+                self._set_image(scan_index)
                 self.__scan_buttons[scan_index].button.setStyleSheet((
                     'background-color: transparent;'
                     'border: 5px solid rgb(100,180,100)'
                 ))
                 self.__scan_buttons[scan_index].background.setStyleSheet(
-                    f'background-color: rgb{self.__get_background_color(key)}'
+                    f'background-color: rgb{self._get_background_color(key)}'
                 )
                 if self.__score_checkbox.isChecked():
                     score = max([*list(self.__scoring.values()), 0])+1
@@ -791,48 +789,48 @@ class SelectionWindow(QtWidgets.QWidget):
                     del self.__scoring[scan_index]
             
             self.__scan_indices.remove(scan_index)
-            self.__set_image(scan_index)
+            self._set_image(scan_index)
             self.__scan_buttons[scan_index].button.setStyleSheet((
                 'background-color: transparent;'
                 'border: 2px solid black'
             ))
             self.__scan_buttons[scan_index].background.setStyleSheet(
-                f'background-color: rgb{self.__get_background_color(key)}'
+                f'background-color: rgb{self._get_background_color(key)}'
             )
     
-    def __on_right_click(self):  
+    def _on_right_click(self):  
         """
         Scan button click action to show a particular scan from a specimen.
         """
         # get the scan button index and key
         scan_index = int(self.sender().objectName())
-        self.__set_image(scan_index)
+        self._set_image(scan_index)
 
-    def __next_case(self) -> None:
+    def _next_case(self) -> None:
         """
         Continue to the next case or close the window after the last case.
         """
-        self.__save_selection()
+        self._save_selection()
 
         # continue to the next specimen or close the window 
         if self.__specimen_index+1 >= len(self.__specimens):
             self.close()
         else:
             self.__specimen_index += 1
-            self.__change_widgets()
+            self._change_widgets()
 
-    def __previous_case(self) -> None:
+    def _previous_case(self) -> None:
         """
         Return to the previous case
         """
-        self.__save_selection()
+        self._save_selection()
 
         # return to the previous specimen
         if self.__specimen_index > 0:
             self.__specimen_index -= 1
-            self.__change_widgets()
+            self._change_widgets()
 
-    def __store_selection(self) -> None:
+    def _store_selection(self) -> None:
         """
         Store selection in specimen instance.
         """
@@ -853,12 +851,12 @@ class SelectionWindow(QtWidgets.QWidget):
             else:
                 scan.score = None
 
-    def __save_selection(self) -> None:
+    def _save_selection(self) -> None:
         """
         Save the selection results.
         """
         # make sure the last information is stored
-        self.__store_selection()
+        self._store_selection()
         # create a new dataframe, add the selection information, and save it
         selection_df = self.__df.copy()
         selection_df['slides'] = [s.information for s in self.__specimens]
@@ -870,7 +868,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Overwritten close event to save selection information
         """
-        self.__save_selection()
+        self._save_selection()
 
         # wait for threads to finish
         if self.__multithreading:
