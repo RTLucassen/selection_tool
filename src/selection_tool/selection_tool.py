@@ -616,7 +616,7 @@ class SelectionWindow(QtWidgets.QWidget):
             for i in range(-before, after+1):
                 index = index_selected_index+i
                 if index >= 0 and index < len(self.__selected_indices):
-                    indices.append(index)
+                    indices.append(self.__selected_indices[index])
         else:
             indices = [self.__specimen_index+i for i in range(-before, after+1)]
             indices = [i for i in indices if i >= 0 and i < len(self.__specimens)]
