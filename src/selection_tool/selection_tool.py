@@ -195,7 +195,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__requested = []
         self.__specimen = None
         self.__specimen_index = 0
-        self.__selected_indices = sorted(list(set(selected_indices)))
+        self.__selected_indices = selected_indices
         self.__scoring = {}
 
         # if an empty list was provided, change to None
@@ -203,6 +203,7 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__selected_indices = None
         # check if the selected indices are all valid
         if self.__selected_indices is not None:
+            self.__selected_indices = sorted(list(set(self.__selected_indices)))
             if (min(self.__selected_indices) < 0 or 
                 max(self.__selected_indices) > len(self.__df)-1):
                 raise ValueError('Atleast one of the selected indices is invalid.')
