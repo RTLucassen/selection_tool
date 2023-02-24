@@ -868,6 +868,9 @@ class SelectionWindow(QtWidgets.QWidget):
         Continue to the next case or close the window after the last case.
         """
         self._save_selection()
+        # reset selection buttons position
+        scroll_bar = self.__scroll_area_buttons.verticalScrollBar()
+        scroll_bar.setValue(0)
 
         # continue to the next specimen or close the window 
         if self.__selected_indices is not None:
@@ -889,6 +892,9 @@ class SelectionWindow(QtWidgets.QWidget):
         Return to the previous case
         """
         self._save_selection()
+        # reset selection buttons position
+        scroll_bar = self.__scroll_area_buttons.verticalScrollBar()
+        scroll_bar.setValue(0)
 
         # return to the previous specimen
         if self.__selected_indices is not None:
