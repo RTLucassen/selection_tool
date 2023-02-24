@@ -199,7 +199,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__scoring = {}
 
         # if an empty list was provided, change to None
-        if not len(self.__selected_indices):
+        if self.__selected_indices == []:
             self.__selected_indices = None
         # check if the selected indices are all valid
         if self.__selected_indices is not None:
