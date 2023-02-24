@@ -163,6 +163,8 @@ for file_id, filename in files.items():
 
 SelectionTool(
     df=df, 
+    starting_index=None,
+    selected_indices=None,
     selection_threshold=None,
     multithreading=True,
     select_by_default=False,

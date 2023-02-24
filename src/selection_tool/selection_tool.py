@@ -145,7 +145,8 @@ class SelectionWindow(QtWidgets.QWidget):
         self, 
         df: pd.DataFrame,
         screen_size: tuple[int],
-        index: int,
+        starting_index: int,
+        selected_indices: list,
         selection_threshold: int,
         select_by_default: bool,
         multithreading: bool,
@@ -159,9 +160,13 @@ class SelectionWindow(QtWidgets.QWidget):
         Args:
             df: dataframe with specimen information from archive database.
             screen_size: size of computer screen as (width, height).
-            index: starting case for selection.
+            starting_index: starting case for selection.
                    (if equal to None, the starting index will be the last case
                    where at least on slide was selected.)
+            selected_indices: list with a selection of indices which are shown. 
+                              The 'previous' and 'next' buttons go to the index 
+                              smaller and larger in the list, respectively.
+                              (if equal to None, all cases are shown.)
             selection_threshold: maximum number of selectable scans per specimen.
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
@@ -190,18 +195,29 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__requested = []
         self.__specimen = None
         self.__specimen_index = 0
+        self.__selected_indices = sorted(list(set(selected_indices)))
         self.__scoring = {}
 
         # if a starting index was provided, use this index
-        if index is not None:
-            self.__specimen_index = index
+        if starting_index is not None:
+            if starting_index < 0 or starting_index > len(self.__df)-1:
+                raise ValueError('Argument for starting index is invalid.')
+            self.__specimen_index = starting_index
         # else, if scans were already selected, continue from the last specimen
         elif 'selected_scans' in self.__df:
             for i, selection in reversed(list(enumerate(self.__df['selected_scans']))):
-                print(i, selection)
                 if selection is not None:
                     self.__specimen_index = i
                     break
+        
+        # if an empty list was provided, change to None
+        if not len(self.__selected_indices):
+            self.__selected_indices = None
+        # check if the selected indices are all valid
+        if self.__selected_indices is not None:
+            if (min(self.__selected_indices) < 0 or 
+                max(self.__selected_indices) > len(self.__df)-1):
+                raise ValueError('Atleast one of the selected indices is invalid.')
 
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
@@ -822,7 +838,15 @@ class SelectionWindow(QtWidgets.QWidget):
         self._save_selection()
 
         # continue to the next specimen or close the window 
-        if self.__specimen_index+1 >= len(self.__specimens):
+        if self.__selected_indices is not None:
+            if self.__specimen_index == max(self.__selected_indices):
+                self.close()
+            else:
+                self.__specimen_index = self.__selected_indices[
+                    self.__selected_indices.index(self.__specimen_index)+1
+                ]
+                self._change_widgets()
+        elif self.__specimen_index+1 >= len(self.__specimens):
             self.close()
         else:
             self.__specimen_index += 1
@@ -835,7 +859,13 @@ class SelectionWindow(QtWidgets.QWidget):
         self._save_selection()
 
         # return to the previous specimen
-        if self.__specimen_index > 0:
+        if self.__selected_indices is not None:
+            if self.__specimen_index != min(self.__selected_indices):
+                self.__specimen_index = self.__selected_indices[
+                    self.__selected_indices.index(self.__specimen_index)-1
+                ]
+            self._change_widgets()
+        elif self.__specimen_index > 0:
             self.__specimen_index -= 1
             self._change_widgets()
 
@@ -899,7 +929,8 @@ class SelectionTool:
     def __init__(
         self,
         df: pd.DataFrame, 
-        index: int = None,
+        starting_index: int = None,
+        selected_indices: list = None,
         selection_threshold: int = None,
         select_by_default: bool = False,
         multithreading: bool = False,
@@ -912,9 +943,13 @@ class SelectionTool:
 
         Args:
             df: dataframe with specimen information from archive database.
-            index: starting case for selection.
+            starting_index: starting case for selection.
                    (if equal to None, the starting index will be the last case
                    where at least on slide was selected.)
+            selected_indices: list with a selection of indices which are shown. 
+                              The 'previous' and 'next' buttons go to the index 
+                              smaller and larger in the list, respectively.
+                              (if equal to None, all cases are shown.)
             selection_threshold: maximum number of selectable scans per specimen.
                                  (None is interpreted as no maximum number)
             select_by_default: specifies whether all scans are selected from the start
@@ -946,7 +981,8 @@ class SelectionTool:
         win = SelectionWindow(
             df, 
             screen_size, 
-            index,
+            starting_index,
+            selected_indices,
             selection_threshold, 
             select_by_default,
             multithreading,
