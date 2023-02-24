@@ -198,18 +198,6 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__selected_indices = sorted(list(set(selected_indices)))
         self.__scoring = {}
 
-        # if a starting index was provided, use this index
-        if starting_index is not None:
-            if starting_index < 0 or starting_index > len(self.__df)-1:
-                raise ValueError('Argument for starting index is invalid.')
-            self.__specimen_index = starting_index
-        # else, if scans were already selected, continue from the last specimen
-        elif 'selected_scans' in self.__df:
-            for i, selection in reversed(list(enumerate(self.__df['selected_scans']))):
-                if selection is not None:
-                    self.__specimen_index = i
-                    break
-        
         # if an empty list was provided, change to None
         if not len(self.__selected_indices):
             self.__selected_indices = None
@@ -219,6 +207,25 @@ class SelectionWindow(QtWidgets.QWidget):
                 max(self.__selected_indices) > len(self.__df)-1):
                 raise ValueError('Atleast one of the selected indices is invalid.')
 
+        # if a starting index was provided, use this index if it is valid
+        if starting_index is not None:
+            if self.__selected_indices is not None:
+                if self.__specimen_index not in self.__selected_indices:
+                    raise ValueError(('Argument for starting index is not part '
+                                      'of the selected indices.'))
+            elif starting_index < 0 or starting_index > len(self.__df)-1:
+                raise ValueError('Argument for starting index is invalid.')
+            self.__specimen_index = starting_index
+        # else, if a subset of cases was provided, start from the first index
+        elif self.__selected_indices is not None:
+            self.__specimen_index = min(self.__selected_indices)
+        # else, if scans were already selected, continue from the last specimen
+        elif 'selected_scans' in self.__df:
+            for i, selection in reversed(list(enumerate(self.__df['selected_scans']))):
+                if selection is not None:
+                    self.__specimen_index = i
+                    break
+        
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
         if self.__select_by_default and selection_threshold is not None:
