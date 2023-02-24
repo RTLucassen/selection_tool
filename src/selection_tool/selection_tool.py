@@ -610,8 +610,18 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # remove all loaded images from specimens outside the buffer range
         before, after = self.__specimen_buffer
-        indices = [self.__specimen_index+i for i in range(-before, after+1)]
-        indices = [i for i in indices if i >= 0 and i < len(self.__specimens)]
+        if self.__selected_indices is not None:
+            indices = []
+            index_selected_index = self.__selected_indices.index(self.__specimen_index)
+            for i in range(-before, after+1):
+                index = index_selected_index+i
+                if index >= 0 and index < len(self.__selected_indices):
+                    indices.append(index)
+        else:
+            indices = [self.__specimen_index+i for i in range(-before, after+1)]
+            indices = [i for i in indices if i >= 0 and i < len(self.__specimens)]
+        
+        # start to load images and determine background colors
         self.__loaded_images = {
             k: v for (k, v) in self.__loaded_images.items() if k[0] in indices
         }
