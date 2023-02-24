@@ -334,6 +334,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__previous_shortcut.activated.connect(self._previous_case)
 
         self._initialize_widgets()
+        self.setFocus()
 
     def _initialize_widgets(self) -> None:
         """
@@ -469,6 +470,7 @@ class SelectionWindow(QtWidgets.QWidget):
         """
         Copy pa_number to clipboard after right mouse button click.
         """
+        self.setFocus()
         # check if the right mouse button was used for clicking
         if event.button() == 2:
             pa_number = self.__specimens[self.__specimen_index].pa_number
@@ -933,9 +935,15 @@ class SelectionWindow(QtWidgets.QWidget):
         selection_df['comments'] = [s.comments for s in self.__specimens]
         selection_df.to_json(self.__output_path)
 
+    def mousePressEvent(self, event):
+        """
+        Overwritten mouse press event to set focus to main widget.
+        """
+        self.setFocus()
+
     def closeEvent(self, a0: QtGui.QCloseEvent):
         """
-        Overwritten close event to save selection information
+        Overwritten close event to save selection information.
         """
         self._save_selection()
 
