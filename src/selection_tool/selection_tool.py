@@ -217,15 +217,27 @@ class SelectionWindow(QtWidgets.QWidget):
             elif starting_index < 0 or starting_index > len(self.__df)-1:
                 raise ValueError('Argument for starting index is invalid.')
             self.__specimen_index = starting_index
+        
         # else, if a subset of cases was provided, start from the first index
         elif self.__selected_indices is not None:
             self.__specimen_index = min(self.__selected_indices)
-        # else, if scans were already selected, continue from the last specimen
+
+        # else, if scans were already (manually) selected, 
+        # start from the last specimen
         elif 'selected_scans' in self.__df:
-            for i, selection in reversed(list(enumerate(self.__df['selected_scans']))):
-                if selection is not None:
-                    self.__specimen_index = i
-                    break
+            for i in reversed(list(range(len(self.__df)))):
+                row = self.__df.iloc[i]
+                if row['selected_scans'] is not None:
+                    # check if any scans were manually selected
+                    all_automatically_selected = True
+                    for slide in row['selected_scans']['slides']:
+                        for scan in slide['scan']:
+                            if 'automatically selected' not in scan['flags']:
+                                all_automatically_selected = False
+                    # if any scans were manually selected, start from this index
+                    if not all_automatically_selected:
+                        self.__specimen_index = i
+                        break
         
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
