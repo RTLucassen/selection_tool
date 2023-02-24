@@ -145,6 +145,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self, 
         df: pd.DataFrame,
         screen_size: tuple[int],
+        index: int,
         selection_threshold: int,
         select_by_default: bool,
         multithreading: bool,
@@ -158,6 +159,9 @@ class SelectionWindow(QtWidgets.QWidget):
         Args:
             df: dataframe with specimen information from archive database.
             screen_size: size of computer screen as (width, height).
+            index: starting case for selection.
+                   (if equal to None, the starting index will be the last case
+                   where at least on slide was selected.)
             selection_threshold: maximum number of selectable scans per specimen.
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
@@ -188,11 +192,16 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__specimen_index = 0
         self.__scoring = {}
 
-        # if scans were already selected, continue from the last specimen
-        if 'selected_scans' in self.__df:
-            for i, selection in enumerate(self.__df['selected_scans']):
+        # if a starting index was provided, use this index
+        if index is not None:
+            self.__specimen_index = index
+        # else, if scans were already selected, continue from the last specimen
+        elif 'selected_scans' in self.__df:
+            for i, selection in reversed(list(enumerate(self.__df['selected_scans']))):
+                print(i, selection)
                 if selection is not None:
                     self.__specimen_index = i
+                    break
 
         # define attribute for selection by default and check selection threshold
         self.__select_by_default = select_by_default
@@ -890,9 +899,10 @@ class SelectionTool:
     def __init__(
         self,
         df: pd.DataFrame, 
+        index: int = None,
         selection_threshold: int = None,
         select_by_default: bool = False,
-        multithreading: bool = True,
+        multithreading: bool = False,
         is_HE_function: Callable = None,
         autoselect_function: Callable = None,
         output_path: str = 'results.json',
@@ -902,7 +912,11 @@ class SelectionTool:
 
         Args:
             df: dataframe with specimen information from archive database.
+            index: starting case for selection.
+                   (if equal to None, the starting index will be the last case
+                   where at least on slide was selected.)
             selection_threshold: maximum number of selectable scans per specimen.
+                                 (None is interpreted as no maximum number)
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
             multithreading: specifies whether higher magnification images are loaded
@@ -932,6 +946,7 @@ class SelectionTool:
         win = SelectionWindow(
             df, 
             screen_size, 
+            index,
             selection_threshold, 
             select_by_default,
             multithreading,
