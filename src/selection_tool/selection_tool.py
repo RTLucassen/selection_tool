@@ -327,13 +327,19 @@ class SelectionWindow(QtWidgets.QWidget):
             *calculate_window_geometry(self.__screen_size, self.__window_fraction),
         )
 
+        # initialize all widgets
+        self._initialize_widgets()
+
         # define and connect keyboard shortcut
         self.__next_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("D"), self)
         self.__next_shortcut.activated.connect(self._next_case)
         self.__previous_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("A"), self)
         self.__previous_shortcut.activated.connect(self._previous_case)
+        self.__score_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("S"), self)
+        self.__score_shortcut.activated.connect(self.__score_checkbox.nextCheckState)
+        self.__HE_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("H"), self)
+        self.__HE_shortcut.activated.connect(self.__HE_checkbox.nextCheckState)
 
-        self._initialize_widgets()
         self.setFocus()
 
     def _initialize_widgets(self) -> None:
