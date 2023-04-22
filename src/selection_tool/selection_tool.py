@@ -210,13 +210,13 @@ class SelectionWindow(QtWidgets.QWidget):
 
         # if a starting index was provided, use this index if it is valid
         if starting_index is not None:
+            self.__specimen_index = starting_index
             if self.__selected_indices is not None:
                 if self.__specimen_index not in self.__selected_indices:
                     raise ValueError(('Argument for starting index is not part '
                                       'of the selected indices.'))
             elif starting_index < 0 or starting_index > len(self.__df)-1:
                 raise ValueError('Argument for starting index is invalid.')
-            self.__specimen_index = starting_index
         
         # else, if a subset of cases was provided, start from the first index
         elif self.__selected_indices is not None:
