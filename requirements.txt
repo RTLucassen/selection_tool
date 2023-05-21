@@ -7,4 +7,4 @@ natsort==8.2.0
 requests==2.28.1
 SimpleITK==2.2.0
 pyqtdarktheme==1.2.1
-git+https://github.com/RTLucassen/slideloader@36698e2f47b2d14af1d3b1aaa3f9a8e85826c9ef
+git+https://github.com/RTLucassen/slideloader
