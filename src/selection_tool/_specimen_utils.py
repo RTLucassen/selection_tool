@@ -18,7 +18,10 @@ Utility classes for specimen and slide information.
 
 import re
 from pathlib import Path
+from typing import Any, Callable, Optional
+
 from natsort import natsorted
+
 from ._general_utils import is_HE, number2roman
 
 
@@ -53,7 +56,7 @@ class Specimen:
         elif len(pa_numbers) == 1:
             self.__pa_number = pa_numbers.pop()
         else:
-            raise AssertionError(('At least two slides with a different '
+            raise ValueError(('At least two slides with a different '
                 'pa_number were assigned to this specimen.'))
 
         # find all specimen numbers
@@ -69,7 +72,7 @@ class Specimen:
         else:
             self.comments = '' 
 
-    def sort_slides(self, is_HE = is_HE):
+    def sort_slides(self, is_HE: Callable = is_HE) -> None:
         """
         Sort slides based on specimen number, block number, and staining.
         """
@@ -90,14 +93,14 @@ class Specimen:
             self.__scans.extend(slide.scans)
 
     @property
-    def information(self):
+    def information(self) -> dict[str, Any]:
         return {
             'slides': [slide.information for slide in self.__slides], 
             'comments': self.comments,
         }
 
     @property
-    def selected_information(self):
+    def selected_information(self) -> Optional[dict[str, Any]]:
         # get the information of the selected scans
         slide_information = []
         for slide in self.__slides:
@@ -113,23 +116,23 @@ class Specimen:
             return None
 
     @property
-    def slides(self):
+    def slides(self) -> list['Slide']:
         return self.__slides
     
     @property
-    def scans(self):
+    def scans(self) -> list['Scan']:
         return self.__scans
 
     @property
-    def pa_number(self):
+    def pa_number(self) -> str:
         return self.__pa_number
 
     @property
-    def specimen_numbers(self):
+    def specimen_numbers(self) -> str:
         return self.__specimen_numbers
 
     @property
-    def description(self):
+    def description(self) -> str:
         return self.__description
 
     def __repr__(self) -> str:
@@ -157,18 +160,18 @@ class Slide:
         self.__scans = [Scan(self, info) for info in slide_information['scan']]        
 
     @property
-    def specimen(self):
+    def specimen(self) -> Specimen:
         return self.__specimen
     
     @property
-    def information(self):
+    def information(self) -> dict[str, Any]:
         return {
             **self.__slide_information,
             'scan': [scan.information for scan in self.__scans],
         }
 
     @property
-    def selected_information(self):
+    def selected_information(self) -> Optional[dict[str, Any]]:
         # get the information for each selected scan
         scan_information = [
             scan.information for scan in self.__scans if scan.selected
@@ -183,23 +186,23 @@ class Slide:
             return None
 
     @property
-    def scans(self):
+    def scans(self) -> list['Scan']:
         return self.__scans
 
     @property
-    def pa_number(self):
+    def pa_number(self) -> str:
         return self.__slide_information['pa_number']
     
     @property
-    def specimen_number(self):
+    def specimen_number(self) -> str:
         return number2roman(self.__slide_information['specimen_nr'])
 
     @property
-    def block(self):
+    def block(self) -> str:
         return self.__slide_information['block']
     
     @property
-    def staining(self):
+    def staining(self) -> str:
         return self.__slide_information['staining']
 
     def __repr__(self) -> str:
@@ -216,6 +219,7 @@ class Scan:
         Initialize scan instance.
 
         Args:
+            slide: slide instance to which the scan belongs.
             scan_information: scan metadata.
         """
         # initialize instance attributes for scan
@@ -255,22 +259,22 @@ class Scan:
             self.flags = []    
 
     @property
-    def slide(self):
+    def slide(self) -> Slide:
         return self.__slide
     
     @property
-    def information(self):
+    def information(self) -> dict[str, Any]:
         self.__scan_information['selected'] = self.selected
         self.__scan_information['score'] = self.score
         self.__scan_information['flags'] = self.flags
         return self.__scan_information
 
     @property
-    def paths(self):
+    def paths(self) -> list[str]:
         return self.__paths
 
     @property
-    def thumbnail_path(self):
+    def thumbnail_path(self) -> Optional[str]:
         return self.__thumb_path
 
     def __repr__(self) -> str:

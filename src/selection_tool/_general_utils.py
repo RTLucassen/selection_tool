@@ -16,8 +16,8 @@
 General utility functions for selection tool.
 """
 
-import scipy
 import numpy as np
+import scipy
 
 
 def is_HE(staining: str) -> bool:
@@ -27,9 +27,9 @@ def is_HE(staining: str) -> bool:
         return False
 
 def calculate_window_geometry(
-    screen_size: tuple[int], 
+    screen_size: tuple[int, int], 
     fraction: float,
-) -> tuple[int]:
+) -> tuple[int, int, int, int]:
     """
     Calculate the width, height, and top left position of the window
     based on the screen size and the faction of the height and width 
@@ -49,9 +49,7 @@ def calculate_window_geometry(
 
     return (int(horizontal_offset), int(vertical_offset), int(width), int(height))
 
-def calculate_background_color(
-    array: np.ndarray, 
-) -> list[int]:
+def calculate_background_color(array: np.ndarray)-> str:
     """
     Calculate the background color from the border of the image.
 

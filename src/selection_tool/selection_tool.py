@@ -28,19 +28,21 @@ Right mouse button click:              reset view
 """
 
 import os
-import sys
 import queue
+import sys
 import threading
-import qdarktheme
+from typing import Callable, Optional
+
 import numpy as np
 import pandas as pd
+import qdarktheme
 import SimpleITK as sitk
-from typing import Callable
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 from slideloader import SlideLoader
+
 from ._viewer_utils import QtImageViewer
 from ._specimen_utils import Specimen
-from ._general_utils import is_HE, calculate_window_geometry, calculate_background_color
+from ._general_utils import calculate_background_color, calculate_window_geometry, is_HE
 from . import fonts
 
 
@@ -144,14 +146,14 @@ class SelectionWindow(QtWidgets.QWidget):
     def __init__(
         self, 
         df: pd.DataFrame,
-        screen_size: tuple[int],
-        starting_index: int,
-        selected_indices: list,
-        selection_threshold: int,
+        screen_size: tuple[int, int],
+        starting_index: Optional[int],
+        selected_indices: Optional[list],
+        selection_threshold: Optional[int],
         select_by_default: bool,
         multithreading: bool,
-        is_HE_function: Callable,
-        autoselect_function: Callable,
+        is_HE_function: Optional[Callable],
+        autoselect_function: Optional[Callable],
         output_path: str,
     ) -> None:
         """
@@ -168,6 +170,7 @@ class SelectionWindow(QtWidgets.QWidget):
                               smaller and larger in the list, respectively.
                               (if equal to None, all cases are shown.)
             selection_threshold: maximum number of selectable scans per specimen.
+                                 (None is interpreted as no maximum number)
             select_by_default: specifies whether all scans are selected from the start
                                (the selection threshold is overwritten when True).
             multithreading: specifies whether higher magnification images are loaded
@@ -276,11 +279,11 @@ class SelectionWindow(QtWidgets.QWidget):
                 # check if output from the autoselection function is valid
                 # if so, apply the autoselection result
                 if not isinstance(autoselected, list):
-                    raise AssertionError(('The autoselect function should provide'
+                    raise TypeError(('The autoselect function should provide'
                         ' a list with for each scan a boolean indicating whether'
                         ' the scan is selected or not.'))
                 elif len(autoselected) != len(specimen.scans):
-                    raise AssertionError(('The number of elements in the list'
+                    raise ValueError(('The number of elements in the list'
                         ' provided by the autoselect function is not equal to the'
                         ' number of scans for the specimen.'))
                 else:
@@ -979,13 +982,13 @@ class SelectionTool:
     def __init__(
         self,
         df: pd.DataFrame, 
-        starting_index: int = None,
-        selected_indices: list = None,
-        selection_threshold: int = None,
+        starting_index: Optional[int] = None,
+        selected_indices: Optional[list] = None,
+        selection_threshold: Optional[int] = None,
         select_by_default: bool = False,
         multithreading: bool = False,
-        is_HE_function: Callable = None,
-        autoselect_function: Callable = None,
+        is_HE_function: Optional[Callable] = None,
+        autoselect_function: Optional[Callable] = None,
         output_path: str = 'results.json',
     ) -> None:
         """

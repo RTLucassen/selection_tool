@@ -9,10 +9,12 @@ Steps:
 
 import os
 import requests
+
 import pandas as pd
 import SimpleITK as sitk
-from tqdm import tqdm
 from slideloader import SlideLoader
+from tqdm import tqdm
+
 from selection_tool import SelectionTool
 
 # specify the directory where the example folder should be configured
@@ -38,9 +40,10 @@ files = {
         'TCGA-EB-A44O-06Z-00-DX1.788C33F2-3766-4792-B8DF-52C5F3E8AEDB.svs',
 }
 
-# define input dataframe 
 # NOTE: The patient information is from TCGA. The pa, specimen, and block numbers 
-# were made up to illustrate how the selection tool works. 
+# were made up to illustrate how the selection tool works.
+
+# define input dataframe  
 description = [
     ('Case ID:\tTCGA-FS-A1ZU\n'
     'Patient details: Female, 70 years old.\n'
@@ -147,7 +150,7 @@ for file_id, filename in files.items():
 
         # check if the file was downloaded correctly
         if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-            raise AssertionError('The file was not successfully downloaded')
+            raise IOError('The file was not successfully downloaded')
 
 # create thumbnail images for WSIs (if necessary)
 loader = SlideLoader()
