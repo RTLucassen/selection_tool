@@ -16,6 +16,7 @@
 Utility classes for specimen and slide information.
 """
 
+import json
 import re
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -40,7 +41,9 @@ class Specimen:
         """
         # convert specimen information from a string to a dictionary if necessary
         if isinstance(specimen_information, str):
-            specimen_information = eval(specimen_information)
+            specimen_information = json.load(
+                specimen_information.replace("'",'"'),
+            )
         
         # create slide instances and initialize attributes
         self.__slides = [Slide(self, info) for info in specimen_information['slides']]
