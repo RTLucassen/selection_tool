@@ -151,19 +151,22 @@ class QtImageViewer(QGraphicsView):
         return QSize(900, 600)
 
     def hasImage(self):
-        """ Returns whether the scene contains an image pixmap.
+        """ 
+        Returns whether the scene contains an image pixmap.
         """
         return self._image is not None
 
     def clearImage(self):
-        """ Removes the current image pixmap from the scene if it exists.
+        """ 
+        Removes the current image pixmap from the scene if it exists.
         """
         if self.hasImage():
             self.scene.removeItem(self._image)
             self._image = None
 
     def pixmap(self):
-        """ Returns the scene's current image pixmap as a QPixmap, or else None if no image exists.
+        """ 
+        Returns the scene's current image pixmap as a QPixmap, or else None if no image exists.
         :rtype: QPixmap | None
         """
         if self.hasImage():
@@ -171,7 +174,8 @@ class QtImageViewer(QGraphicsView):
         return None
 
     def image(self):
-        """ Returns the scene's current image pixmap as a QImage, or else None if no image exists.
+        """ 
+        Returns the scene's current image pixmap as a QImage, or else None if no image exists.
         :rtype: QImage | None
         """
         if self.hasImage():
@@ -179,7 +183,8 @@ class QtImageViewer(QGraphicsView):
         return None
 
     def setImage(self, image):
-        """ Set the scene's current image pixmap to the input QImage or QPixmap.
+        """ 
+        Set the scene's current image pixmap to the input QImage or QPixmap.
         Raises a RuntimeError if the input image has type other than QImage or QPixmap.
         :type image: QImage | QPixmap
         """
@@ -199,7 +204,8 @@ class QtImageViewer(QGraphicsView):
         self.updateViewer()
 
     def updateViewer(self):
-        """ Show current zoom (if showing entire image, apply current aspect ratio mode).
+        """ 
+        Show current zoom (if showing entire image, apply current aspect ratio mode).
         """
         if not self.hasImage():
             return
@@ -215,12 +221,14 @@ class QtImageViewer(QGraphicsView):
             self.viewChanged.emit()
 
     def resizeEvent(self, event):
-        """ Maintain current zoom on resize.
+        """ 
+        Maintain current zoom on resize.
         """
         self.updateViewer()
 
     def mousePressEvent(self, event):
-        """ Start mouse pan or zoom mode.
+        """ 
+        Start mouse pan or zoom mode.
         """
         # Ignore dummy events. e.g., Faking pan with left button ScrollHandDrag.
         dummyModifiers = Qt.KeyboardModifier(Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.ControlModifier
@@ -281,7 +289,8 @@ class QtImageViewer(QGraphicsView):
         QGraphicsView.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
-        """ Stop mouse pan or zoom mode (apply zoom if valid).
+        """ 
+        Stop mouse pan or zoom mode (apply zoom if valid).
         """
         # Ignore dummy events. e.g., Faking pan with left button ScrollHandDrag.
         dummyModifiers = Qt.KeyboardModifier(Qt.KeyboardModifier.ShiftModifier | Qt.KeyboardModifier.ControlModifier
@@ -347,7 +356,8 @@ class QtImageViewer(QGraphicsView):
         QGraphicsView.mouseReleaseEvent(self, event)
 
     def mouseDoubleClickEvent(self, event):
-        """ Show entire image.
+        """ 
+        Show entire image.
         """
         # Zoom out on double click?
         if (self.zoomOutButton is not None) and (event.button() == self.zoomOutButton):

@@ -20,6 +20,8 @@ _________________________________________________
 <a>:                            previous specimen
 <d>:                                next specimen
 
+
+
 Viewer controls
 _________________________________________________
 Left mouse button press:                  panning
@@ -160,27 +162,25 @@ class SelectionWindow(QtWidgets.QWidget):
         Initialize selection window instance.
 
         Args:
-            df: dataframe with specimen information from archive database.
-            screen_size: size of computer screen as (width, height).
-            starting_index: starting case for selection.
-                   (if equal to None, the starting index will be the last case
-                   where at least on slide was selected.)
-            selected_indices: list with a selection of indices which are shown. 
-                              The 'previous' and 'next' buttons go to the index 
-                              smaller and larger in the list, respectively.
-                              (if equal to None, all cases are shown.)
-            selection_threshold: maximum number of selectable scans per specimen.
-                                 (None is interpreted as no maximum number)
-            select_by_default: specifies whether all scans are selected from the start
-                               (the selection threshold is overwritten when True).
-            multithreading: specifies whether higher magnification images are loaded
-                            in the background on different threads.
-            is_HE_fuction: function that returns True when straining name 
-                           refers to H&E and False otherwise.
-            autoselect_function: function that returns list with boolean for each
-                                 scan for the input specimen indicating whether it
-                                 should be automatically selected or not.
-            output_path: path to output file to save the selection results.
+            df:  Dataframe with specimen information from archive database.
+            screen_size:  Size of computer screen as (width, height).
+            starting_index:  Starting case for selection (if None, the starting 
+                index will be the last case where at least on slide was selected).
+            selected_indices:  List with a selection of indices which are shown. 
+                The 'previous' and 'next' buttons go to the index smaller and 
+                larger in the list, respectively. (if None, all cases are shown).
+            selection_threshold:  Maximum number of selectable scans per specimen
+                (None is interpreted as no maximum number).
+            select_by_default:  Specifies whether all scans are selected from 
+                the start (the selection threshold is overwritten when True).
+            multithreading:  Specifies whether higher magnification images are 
+                loaded in the background on different threads.
+            is_HE_fuction:  Function that returns True when straining name 
+                refers to H&E and False otherwise.
+            autoselect_function:  Function that returns list with boolean for 
+                each scan for the input specimen indicating whether it should 
+                be automatically selected or not.
+            output_path:  Path to output file to save the selection results.
         """
         super().__init__()
         # define instance attributes
@@ -345,6 +345,7 @@ class SelectionWindow(QtWidgets.QWidget):
 
         self.setFocus()
 
+
     def _initialize_widgets(self) -> None:
         """
         Initialize widgets and position in the window.
@@ -433,7 +434,7 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__info_label.setMinimumWidth(
             int(self.__info_fraction*self.__screen_size[0]),
         )
-        
+
         # define layout for the scroll region
         self.__scroll_layout_label = QtWidgets.QFormLayout()        
         self.__scroll_layout_label.addWidget(self.__info_label)
@@ -475,6 +476,7 @@ class SelectionWindow(QtWidgets.QWidget):
         
         self._change_widgets()
 
+
     def _copy(self, event):
         """
         Copy pa_number to clipboard after right mouse button click.
@@ -487,22 +489,28 @@ class SelectionWindow(QtWidgets.QWidget):
             cb.clear(mode=cb.Clipboard)
             cb.setText(pa_number, mode=cb.Clipboard)
 
+
     def _get_background_color(self, key: tuple[int, int, bool]) -> str:
         """
         Get the background color from the dictionary. 
-        Return None if the key is not in the dictionary>
+        Return None if the key is not in the dictionary.
+
+        Args:
+            key:  Tuple consisting of (specimen index, scan index, boolean that 
+                indicates whether the image is loaded in low or higher magnification).
         """
         if key in self.__background_colors:
             return self.__background_colors[key]
         else:
             return self.__default_background_color
         
+
     def _set_image(self, scan_index: int) -> None:
         """
         Set an image in the main image viewer.
 
         Args:
-            scan_index: index integer to indicate scan for specimen.
+            scan_index:  Index integer to indicate scan for specimen.
         """        
         # get the pixmap
         if scan_index is None:
@@ -527,12 +535,14 @@ class SelectionWindow(QtWidgets.QWidget):
             )
             self.__image_viewer.clearZoom()
         
+
     def _load_image(self, key: tuple[int, int, bool]) -> None:
         """
         Load higher magnification image on another thread.
         
         Args:
-            key: index to indicate scan for specimen.
+            key:  Tuple consisting of (specimen index, scan index, boolean that 
+                indicates whether the image is loaded in low or higher magnification).
         """
         # initialize SlideLoader instance
         loader = SlideLoader({'progress_bar': False, 'multithreading': True})
@@ -577,12 +587,14 @@ class SelectionWindow(QtWidgets.QWidget):
             print(('Warning: A scan was not successfully loaded. '
                 'Check if the magnification was set correctly'))
 
+
     def _load_thumbail(self, key: tuple[int, int, bool]) -> None:
         """
         Load thumbnail image on a new thread.
         
         Args:
-            key: index to indicate scan for specimen.
+            key:  Tuple consisting of (specimen index, scan index, boolean that 
+                indicates whether the image is loaded in low or higher magnification).
         """
         # check if there are any paths 
         path = self.__specimens[key[0]].scans[key[1]].thumbnail_path
@@ -608,6 +620,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 ))
                 self.__background_colors[key] = calculate_background_color(array)
                 self.__loaded_images[key] = pixmap
+
 
     def _change_widgets(self) -> None:
         """
@@ -802,6 +815,7 @@ class SelectionWindow(QtWidgets.QWidget):
         else:
             self._set_image(first_visible)
 
+
     def _on_left_click(self):
         """
         Scan button click action to (de)select a particular scan from a specimen.
@@ -864,6 +878,7 @@ class SelectionWindow(QtWidgets.QWidget):
                 f'background-color: rgb{self._get_background_color(key)}'
             )
     
+
     def _on_right_click(self):  
         """
         Scan button click action to show a particular scan from a specimen.
@@ -871,6 +886,7 @@ class SelectionWindow(QtWidgets.QWidget):
         # get the scan button index and key
         scan_index = int(self.sender().objectName())
         self._set_image(scan_index)
+
 
     def _next_case(self) -> None:
         """
@@ -896,9 +912,10 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__specimen_index += 1
             self._change_widgets()
 
+
     def _previous_case(self) -> None:
         """
-        Return to the previous case
+        Return to the previous case.
         """
         self._save_selection()
         # reset selection buttons position
@@ -915,6 +932,7 @@ class SelectionWindow(QtWidgets.QWidget):
         elif self.__specimen_index > 0:
             self.__specimen_index -= 1
             self._change_widgets()
+
 
     def _store_selection(self) -> None:
         """
@@ -937,6 +955,7 @@ class SelectionWindow(QtWidgets.QWidget):
             else:
                 scan.score = None
 
+
     def _save_selection(self) -> None:
         """
         Save the selection results.
@@ -950,11 +969,13 @@ class SelectionWindow(QtWidgets.QWidget):
         selection_df['comments'] = [s.comments for s in self.__specimens]
         selection_df.to_json(self.__output_path)
 
+
     def mousePressEvent(self, event):
         """
         Overwritten mouse press event to set focus to main widget.
         """
         self.setFocus()
+
 
     def closeEvent(self, a0: QtGui.QCloseEvent):
         """
@@ -975,8 +996,8 @@ class SelectionWindow(QtWidgets.QWidget):
 
 class SelectionTool:
     """
-    Implementation of selection tool class for 
-    configuring window and application mainloop.
+    Implementation of selection tool class for configuring window and 
+    application mainloop.
     """
 
     def __init__(
@@ -995,26 +1016,24 @@ class SelectionTool:
         Create the WSI selection window.
 
         Args:
-            df: dataframe with specimen information from archive database.
-            starting_index: starting case for selection.
-                   (if equal to None, the starting index will be the last case
-                   where at least on slide was selected.)
-            selected_indices: list with a selection of indices which are shown. 
-                              The 'previous' and 'next' buttons go to the index 
-                              smaller and larger in the list, respectively.
-                              (if equal to None, all cases are shown.)
-            selection_threshold: maximum number of selectable scans per specimen.
-                                 (None is interpreted as no maximum number)
-            select_by_default: specifies whether all scans are selected from the start
-                               (the selection threshold is overwritten when True).
-            multithreading: specifies whether higher magnification images are loaded
-                            in the background on different threads.
-            is_HE_fuction: function that returns True when straining name 
-                           refers to H&E and False otherwise.
-            autoselect_function: function that returns list with boolean for each
-                                 scan for the input specimen indicating whether it
-                                 should be automatically selected or not.
-            output_path: path to output file to save the selection results.
+            df:  Dataframe with specimen information from archive database.
+            starting_index:  Starting case for selection (if None, the starting 
+                index will be the last case where at least on slide was selected).
+            selected_indices:  List with a selection of indices which are shown. 
+                The 'previous' and 'next' buttons go to the index smaller and 
+                larger in the list, respectively. (if None, all cases are shown).
+            selection_threshold:  Maximum number of selectable scans per specimen.
+                (None is interpreted as no maximum number).
+            select_by_default:  Specifies whether all scans are selected from 
+                the start (the selection threshold is overwritten when True).
+            multithreading:  Specifies whether higher magnification images are 
+                loaded in the background on different threads.
+            is_HE_fuction:  Function that returns True when straining name refers 
+                to H&E and False otherwise.
+            autoselect_function:  Function that returns list with boolean for each
+                scan for the input specimen indicating whether it should be 
+                automatically selected or not.
+            output_path:  Path to output file to save the selection results.
         """
         app = QtWidgets.QApplication(sys.argv)
 

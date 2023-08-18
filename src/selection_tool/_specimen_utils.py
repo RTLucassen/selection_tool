@@ -36,8 +36,8 @@ class Specimen:
         Initialize specimen instance and corresponding slide and scan instances.
 
         Args:
-            specimen_information: metadata from all slides.
-            description: text description of the specimen.
+            specimen_information:  Metadata from all slides.
+            description:  Text description of the specimen.
         """
         # convert specimen information from a string to a dictionary if necessary
         if isinstance(specimen_information, str):
@@ -75,9 +75,13 @@ class Specimen:
         else:
             self.comments = '' 
 
+
     def sort_slides(self, is_HE: Callable = is_HE) -> None:
         """
         Sort slides based on specimen number, block number, and staining.
+
+        Args:
+            is_HE:  Function to assess whether staining is H&E.
         """
         # create list with tuples that contain the characteristics for sorting
         # in decending order of importance, with the slide index as last element
@@ -138,6 +142,7 @@ class Specimen:
     def description(self) -> str:
         return self.__description
 
+
     def __repr__(self) -> str:
         description = str([s for s in self.slides])
         return f'Specimen {self.pa_number}-{self.specimen_numbers}: {description}'
@@ -153,7 +158,8 @@ class Slide:
         Initialize slide instance.
 
         Args:
-            slide_information: slide metadata.
+            specimen:  Specimen instance to which the slide belongs.
+            slide_information:  Slide metadata.
         """
         # initialize instance attributes for slide and create scan instances
         self.__specimen = specimen
@@ -208,6 +214,7 @@ class Slide:
     def staining(self) -> str:
         return self.__slide_information['staining']
 
+
     def __repr__(self) -> str:
         return f'Slide(Block {self.block}, {self.staining}, {len(self.scans)} scan(s))'
 
@@ -222,8 +229,8 @@ class Scan:
         Initialize scan instance.
 
         Args:
-            slide: slide instance to which the scan belongs.
-            scan_information: scan metadata.
+            slide:  Slide instance to which the scan belongs.
+            scan_information:  Scan metadata.
         """
         # initialize instance attributes for scan
         self.__slide = slide
@@ -279,6 +286,7 @@ class Scan:
     @property
     def thumbnail_path(self) -> Optional[str]:
         return self.__thumb_path
+
 
     def __repr__(self) -> str:
         return f'Scan object'

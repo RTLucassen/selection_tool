@@ -21,10 +21,14 @@ import scipy
 
 
 def is_HE(staining: str) -> bool:
+    """
+    Check if staining is H&E.
+    """
     if 'he' in staining.lower() or 'h&e' in staining.lower():
         return True
     else:
         return False
+
 
 def calculate_window_geometry(
     screen_size: tuple[int, int], 
@@ -36,11 +40,11 @@ def calculate_window_geometry(
     to be occupied by the window.
 
     Args:
-        screen_size: size of computer screen as (width, height).
-        fraction: fraction of height and width occupied by selection window.
+        screen_size:  Size of computer screen as (width, height).
+        fraction:  Fraction of height and width occupied by selection window.
 
     Returns:
-        window_geometry: width, height, and top left position of the window.
+        window_geometry:  Width, height, and top left position of the window.
     """
     width = screen_size[0]*fraction
     height = screen_size[1]*fraction
@@ -49,15 +53,16 @@ def calculate_window_geometry(
 
     return (int(horizontal_offset), int(vertical_offset), int(width), int(height))
 
+
 def calculate_background_color(array: np.ndarray)-> str:
     """
     Calculate the background color from the border of the image.
 
     Args:
-        array: RGB image data.
+        array:  RGB image data.
 
     Returns:
-        background_color: RGB-values for background color.
+        background_color:  RGB-values for background color.
     """
     # get the pixels from the outside
     outside = np.concatenate([
@@ -70,6 +75,7 @@ def calculate_background_color(array: np.ndarray)-> str:
     background_color = str(tuple(scipy.stats.mode(outside, axis=0, keepdims=True)[0][0]))
 
     return background_color
+
 
 def number2roman(number: str) -> str:
     """
