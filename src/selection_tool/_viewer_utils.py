@@ -49,7 +49,8 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QSizePolicy
 
 
 class QtImageViewer(QGraphicsView):
-    """ PyQt image viewer widget based on QGraphicsView with mouse zooming/panning.
+    """ 
+    PyQt image viewer widget based on QGraphicsView with mouse zooming/panning.
 
     Image File:
     -----------

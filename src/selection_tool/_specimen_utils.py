@@ -75,7 +75,6 @@ class Specimen:
         else:
             self.comments = '' 
 
-
     def sort_slides(self, is_HE: Callable = is_HE) -> None:
         """
         Sort slides based on specimen number, block number, and staining.
@@ -141,7 +140,6 @@ class Specimen:
     @property
     def description(self) -> str:
         return self.__description
-
 
     def __repr__(self) -> str:
         description = str([s for s in self.slides])
@@ -214,7 +212,6 @@ class Slide:
     def staining(self) -> str:
         return self.__slide_information['staining']
 
-
     def __repr__(self) -> str:
         return f'Slide(Block {self.block}, {self.staining}, {len(self.scans)} scan(s))'
 
@@ -286,7 +283,6 @@ class Scan:
     @property
     def thumbnail_path(self) -> Optional[str]:
         return self.__thumb_path
-
 
     def __repr__(self) -> str:
         return f'Scan object'

@@ -21,7 +21,6 @@ _________________________________________________
 <d>:                                next specimen
 
 
-
 Viewer controls
 _________________________________________________
 Left mouse button press:                  panning
@@ -52,6 +51,7 @@ FONTS = [
     'DMSans-Bold.ttf', 
     'DMSans-Regular.ttf',
 ]
+
 
 class CustomQPushButton(QtWidgets.QPushButton):
     rightclicked = QtCore.pyqtSignal()
@@ -345,7 +345,6 @@ class SelectionWindow(QtWidgets.QWidget):
 
         self.setFocus()
 
-
     def _initialize_widgets(self) -> None:
         """
         Initialize widgets and position in the window.
@@ -476,7 +475,6 @@ class SelectionWindow(QtWidgets.QWidget):
         
         self._change_widgets()
 
-
     def _copy(self, event):
         """
         Copy pa_number to clipboard after right mouse button click.
@@ -488,7 +486,6 @@ class SelectionWindow(QtWidgets.QWidget):
             cb = QtWidgets.QApplication.clipboard()
             cb.clear(mode=cb.Clipboard)
             cb.setText(pa_number, mode=cb.Clipboard)
-
 
     def _get_background_color(self, key: tuple[int, int, bool]) -> str:
         """
@@ -504,7 +501,6 @@ class SelectionWindow(QtWidgets.QWidget):
         else:
             return self.__default_background_color
         
-
     def _set_image(self, scan_index: int) -> None:
         """
         Set an image in the main image viewer.
@@ -535,7 +531,6 @@ class SelectionWindow(QtWidgets.QWidget):
             )
             self.__image_viewer.clearZoom()
         
-
     def _load_image(self, key: tuple[int, int, bool]) -> None:
         """
         Load higher magnification image on another thread.
@@ -587,7 +582,6 @@ class SelectionWindow(QtWidgets.QWidget):
             print(('Warning: A scan was not successfully loaded. '
                 'Check if the magnification was set correctly'))
 
-
     def _load_thumbail(self, key: tuple[int, int, bool]) -> None:
         """
         Load thumbnail image on a new thread.
@@ -620,7 +614,6 @@ class SelectionWindow(QtWidgets.QWidget):
                 ))
                 self.__background_colors[key] = calculate_background_color(array)
                 self.__loaded_images[key] = pixmap
-
 
     def _change_widgets(self) -> None:
         """
@@ -815,7 +808,6 @@ class SelectionWindow(QtWidgets.QWidget):
         else:
             self._set_image(first_visible)
 
-
     def _on_left_click(self):
         """
         Scan button click action to (de)select a particular scan from a specimen.
@@ -878,7 +870,6 @@ class SelectionWindow(QtWidgets.QWidget):
                 f'background-color: rgb{self._get_background_color(key)}'
             )
     
-
     def _on_right_click(self):  
         """
         Scan button click action to show a particular scan from a specimen.
@@ -886,7 +877,6 @@ class SelectionWindow(QtWidgets.QWidget):
         # get the scan button index and key
         scan_index = int(self.sender().objectName())
         self._set_image(scan_index)
-
 
     def _next_case(self) -> None:
         """
@@ -912,7 +902,6 @@ class SelectionWindow(QtWidgets.QWidget):
             self.__specimen_index += 1
             self._change_widgets()
 
-
     def _previous_case(self) -> None:
         """
         Return to the previous case.
@@ -932,7 +921,6 @@ class SelectionWindow(QtWidgets.QWidget):
         elif self.__specimen_index > 0:
             self.__specimen_index -= 1
             self._change_widgets()
-
 
     def _store_selection(self) -> None:
         """
@@ -955,7 +943,6 @@ class SelectionWindow(QtWidgets.QWidget):
             else:
                 scan.score = None
 
-
     def _save_selection(self) -> None:
         """
         Save the selection results.
@@ -969,13 +956,11 @@ class SelectionWindow(QtWidgets.QWidget):
         selection_df['comments'] = [s.comments for s in self.__specimens]
         selection_df.to_json(self.__output_path)
 
-
     def mousePressEvent(self, event):
         """
         Overwritten mouse press event to set focus to main widget.
         """
         self.setFocus()
-
 
     def closeEvent(self, a0: QtGui.QCloseEvent):
         """
