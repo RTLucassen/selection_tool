@@ -1,5 +1,5 @@
 # Selection Tool
-A graphical user interface for selecting whole slide images (WSIs) in Python using 
+A graphical user interface for selecting whole slide images (WSIs) in Python 3.9+ using 
 [PyQt5](https://www.riverbankcomputing.com/software/pyqt/).
 <div align="center">
   <img width="100%" alt="Demo" src=".github\demo.gif">
