@@ -41,7 +41,7 @@ class Specimen:
         """
         # convert specimen information from a string to a dictionary if necessary
         if isinstance(specimen_information, str):
-            specimen_information = json.load(
+            specimen_information = json.loads(
                 specimen_information.replace("'",'"'),
             )
         
