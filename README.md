@@ -35,17 +35,18 @@ and saving corresponding low magnification thumbnail images.
 The dataset then serves as an example to play around with the selection tool.
 
 ## Input
-The tool expects a Pandas dataframe as input. This dataframe should at least 
-have two columns, `description` and `slides`, with as rows the information 
-for each specimen. Other columns are not used by the selection tool,
-but if given as part of the input dataframe, 
-extra columns will also be included in the output file.
+The tool expects a Pandas dataframe as input.
+This dataframe must have a column called `slides` containing the slide information for each specimen,
+and if present, uses a column called `description` containing the specimen description.
 - Each item in the `description` column should be a string with more information about the specimen,
 which is displayed to the user on the right side of the window.
 - Each item in the `slides` column should be a dictionary containing 
 all other information about the specimen, including the pa_number,
 specimen number, block number, staining type, and paths to all images. 
 A minimal example is provided below:
+Other columns are not used by the selection tool and remain unchanged if given as part of the input dataframe. 
+The selection results are stored as extra columns of the dataframe which is saved as the output file.
+
 ```
 example_slides = {
     'slides': [{

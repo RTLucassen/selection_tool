@@ -188,9 +188,12 @@ class SelectionWindow(QtWidgets.QWidget):
         self.__screen_size = screen_size
         self.__output_path = output_path
         self.__multithreading = multithreading
-        self.__specimens = [
-            Specimen(row['slides'], row['description']) for _, row in self.__df.iterrows()
-        ]
+        self.__specimens = []
+        for _, row in self.__df.iterrows():
+            if 'description' in self.__df:
+                self.__specimens.append(Specimen(row['slides'], row['description']))
+            else:
+                self.__specimens.append(Specimen(row['slides']))
         self.__max_buttons = max([len(specimen.scans) for specimen in self.__specimens])
         self.__button_size = int(self.__button_fraction*self.__screen_size[0])
         self.__loaded_images = {}
