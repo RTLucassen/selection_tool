@@ -18,7 +18,8 @@ $ pip install git+https://github.com/RTLucassen/selection_tool
 
 ## Example
 A minimal example of how the selection tool can be used.
-```
+
+```python
 import pandas as pd
 from selection_tool import SelectionTool
 
@@ -48,7 +49,8 @@ Other columns are not used by the selection tool and remain unchanged if given a
 The selection results are stored as extra columns in the input dataframe, which is then saved as output file.
 
 A minimal example is provided below:
-```
+
+```python
 example_slides = pd.DataFrame.from_dict({
     'slides': [{
         'pa_number': 'T23-00001', 
