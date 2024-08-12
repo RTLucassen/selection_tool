@@ -24,7 +24,7 @@ import pandas as pd
 from selection_tool import SelectionTool
 
 # load dataframe with 
-df = pd.load_json(r'path/to/file.json')
+df = pd.read_json(r'path/to/file.json')
 
 # start selecting WSIs
 SelectionTool(df)
